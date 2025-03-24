@@ -1,0 +1,40 @@
+import { parseUnits, type Address } from 'viem';
+import * as dotenv from 'dotenv';
+import { deployedContracts } from '../abis/deployedContracts';
+import {privateKeyToAccount} from "viem/accounts";
+
+dotenv.config();
+
+const chainId = process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : 31337;
+const poolManagerAddress = process.env.POOLMANAGER_CONTRACT_ADDRESS;
+const gtxRouterAddress = process.env.GTXROUTER_CONTRACT_ADDRESS;
+const balanceManagerAddress = process.env.BALANCEMANAGER_CONTRACT_ADDRESS;
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+
+export const gtxRouterAbi = deployedContracts[chainId]?.GTXRouter?.abi;
+export const poolManagerAbi = deployedContracts[chainId]?.PoolManager?.abi;
+export const balanaceManagerAbi = deployedContracts[chainId]?.BalanceManager?.abi;
+
+const config = {
+    poolManagerAddress: poolManagerAddress as Address,
+    routerAddress: gtxRouterAddress as Address,
+    balanceManagerAddress: balanceManagerAddress as Address,
+
+    baseToken: process.env.BASE_TOKEN_ADDRESS,
+    quoteToken: process.env.QUOTE_TOKEN_ADDRESS,
+
+    spreadPercentage: Number(process.env.SPREAD_PERCENTAGE || 0.2), // Default 0.2%
+    orderSize: parseUnits(process.env.ORDER_SIZE || '0.1', 18), // Default 0.1 base token
+    maxOrdersPerSide: Number(process.env.MAX_ORDERS_PER_SIDE || 5),
+    priceStepPercentage: Number(process.env.PRICE_STEP_PERCENTAGE || 0.1), // Default 0.1%
+    refreshInterval: Number(process.env.REFRESH_INTERVAL || 60000), // Default 1 minute
+
+    privateKey: process.env.PRIVATE_KEY as string,
+    account: account,
+
+    rpcUrl: process.env.RPC_URL as string,
+    chainId: chainId,
+
+};
+
+export default config;
