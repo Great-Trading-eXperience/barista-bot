@@ -1,5 +1,5 @@
-import { createPublicClient, createWalletClient, http, parseEther, parseUnits, formatUnits, type Address } from 'viem';
-import {anvil, arbitrum} from 'viem/chains';
+import { createPublicClient, createWalletClient, http, parseEther, parseUnits, formatUnits, type Address, Account } from 'viem';
+import { anvil } from 'viem/chains';
 import config from '../config/config';
 import { erc20Abi } from '../abis/erc20Abi';
 
@@ -19,8 +19,9 @@ const mockTokenAbi = [
 
 const chain = anvil;
 
-async function setup() {
-    console.log('Setting up tokens and approvals for trading...');
+export async function setup(account?: Account) {
+    const accountToUse = account || config.account;
+    console.log(`Setting up tokens and approvals for account ${accountToUse.address}...`);
 
     const publicClient = createPublicClient({
         chain: chain,
@@ -30,78 +31,92 @@ async function setup() {
     const walletClient = createWalletClient({
         chain: chain,
         transport: http(config.rpcUrl),
-        account: config.account,
+        account: accountToUse,
     });
 
     try {
         const baseToken = config.baseToken;
         const quoteToken = config.quoteToken;
-        const balanceManagerAddress = await getBalanceManagerAddress();
+        const balanceManagerAddress = config.balanceManagerAddress;
 
-        const baseTokenBalance = await getTokenBalance(baseToken, config.account.address);
-        const quoteTokenBalance = await getTokenBalance(quoteToken, config.account.address);
+        // Check current balances
+        const baseTokenBalance = await getTokenBalance(baseToken, accountToUse.address);
+        const quoteTokenBalance = await getTokenBalance(quoteToken, accountToUse.address);
 
-        console.log(`Initial balances:`);
+        console.log(`Current balances for ${accountToUse.address}:`);
         console.log(`- Base token (ETH): ${formatUnits(baseTokenBalance, 18)} ETH`);
         console.log(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC`);
 
-        console.log(`Minting 1,000,000 ETH to ${config.account.address}...`);
-        const mintBaseAmount = parseEther('1000000');
+        // Define minimum required balances
+        const minBaseBalance = parseEther('10000');
+        const minQuoteBalance = parseUnits('1000000', 6);
 
-        await walletClient.writeContract({
-            address: baseToken,
-            abi: mockTokenAbi,
-            functionName: 'mint',
-            args: [config.account.address, mintBaseAmount],
-        });
+        // Mint tokens if balance is insufficient
+        if (baseTokenBalance < minBaseBalance) {
+            console.log(`Minting ETH to ${accountToUse.address}...`);
+            const mintBaseAmount = parseEther('1000000');
 
-        console.log(`Minting 1,000,000,000,000 USDC to ${config.account.address}...`);
-        const mintQuoteAmount = parseUnits('1000000000000', 6); // USDC has 6 decimals
+            await walletClient.writeContract({
+                address: baseToken,
+                abi: mockTokenAbi,
+                functionName: 'mint',
+                args: [accountToUse.address, mintBaseAmount],
+            });
+        } else {
+            console.log(`Base token balance is sufficient.`);
+        }
 
-        await walletClient.writeContract({
-            address: quoteToken,
-            abi: mockTokenAbi,
-            functionName: 'mint',
-            args: [config.account.address, mintQuoteAmount],
-        });
+        if (quoteTokenBalance < minQuoteBalance) {
+            console.log(`Minting USDC to ${accountToUse.address}...`);
+            const mintQuoteAmount = parseUnits('1000000000000', 6);
 
-        const newBaseBalance = await getTokenBalance(baseToken, config.account.address);
-        const newQuoteBalance = await getTokenBalance(quoteToken, config.account.address);
+            await walletClient.writeContract({
+                address: quoteToken,
+                abi: mockTokenAbi,
+                functionName: 'mint',
+                args: [accountToUse.address, mintQuoteAmount],
+            });
+        } else {
+            console.log(`Quote token balance is sufficient.`);
+        }
 
-        console.log(`Updated balances after minting:`);
-        console.log(`- Base token (ETH): ${formatUnits(newBaseBalance, 18)} ETH`);
-        console.log(`- Quote token (USDC): ${formatUnits(newQuoteBalance, 6)} USDC`);
+        // Check current allowances
+        const baseAllowance = await getAllowance(baseToken, accountToUse.address, balanceManagerAddress);
+        const quoteAllowance = await getAllowance(quoteToken, accountToUse.address, balanceManagerAddress);
 
-        console.log(`Approving infinite amounts for the balance manager at ${balanceManagerAddress}...`);
         const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        const minAllowance = parseEther('1000');
 
-        await walletClient.writeContract({
-            address: baseToken,
-            abi: erc20Abi,
-            functionName: 'approve',
-            args: [balanceManagerAddress, maxUint256],
-        });
-        console.log(`Base token (ETH) approved for the balance manager`);
+        // Approve tokens if allowance is insufficient
+        if (baseAllowance < minAllowance) {
+            console.log(`Approving ETH for balance manager...`);
+            await walletClient.writeContract({
+                address: baseToken,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [balanceManagerAddress, maxUint256],
+            });
+        } else {
+            console.log(`Base token allowance is sufficient.`);
+        }
 
-        await walletClient.writeContract({
-            address: quoteToken,
-            abi: erc20Abi,
-            functionName: 'approve',
-            args: [balanceManagerAddress, maxUint256],
-        });
-        console.log(`Quote token (USDC) approved for the balance manager`);
+        if (quoteAllowance < minAllowance) {
+            console.log(`Approving USDC for balance manager...`);
+            await walletClient.writeContract({
+                address: quoteToken,
+                abi: erc20Abi,
+                functionName: 'approve',
+                args: [balanceManagerAddress, maxUint256],
+            });
+        } else {
+            console.log(`Quote token allowance is sufficient.`);
+        }
 
-        const baseAllowance = await getAllowance(baseToken, config.account.address, balanceManagerAddress);
-        const quoteAllowance = await getAllowance(quoteToken, config.account.address, balanceManagerAddress);
-
-        console.log(`Current allowances:`);
-        console.log(`- Base token (ETH): ${baseAllowance.toString()} (${baseAllowance >= maxUint256 ? 'Infinite' : 'Limited'})`);
-        console.log(`- Quote token (USDC): ${quoteAllowance.toString()} (${quoteAllowance >= maxUint256 ? 'Infinite' : 'Limited'})`);
-
-        console.log('Setup completed successfully!');
+        console.log(`Setup completed successfully for ${accountToUse.address}`);
+        return true;
     } catch (error) {
         console.error('Error during setup:', error);
-        throw error;
+        return false;
     }
 
     async function getTokenBalance(tokenAddress: Address, accountAddress: Address): Promise<bigint> {
@@ -121,15 +136,14 @@ async function setup() {
             args: [ownerAddress, spenderAddress],
         }) as Promise<bigint>;
     }
-
-    async function getBalanceManagerAddress(): Promise<Address> {
-        return config.balanceManagerAddress;
-    }
 }
 
-setup()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error('Unhandled error in setup:', error);
-        process.exit(1);
-    });
+// Only run directly when script is executed directly
+if (require.main === module) {
+    setup()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error('Unhandled error in setup:', error);
+            process.exit(1);
+        });
+}

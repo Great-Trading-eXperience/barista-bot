@@ -1,30 +1,38 @@
-import { MarketMaker } from './market-maker';
+// barista-bot/src/index.ts
+import { BotManager } from './services/botManager';
 
 async function main() {
-    console.log('Initializing Barista Market Maker Bot');
+    console.log('Starting Barista Bot System');
+
+    const botManager = new BotManager();
 
     try {
-        const marketMaker = new MarketMaker();
-        const initialized = await marketMaker.initialize();
+        // Get command line arguments
+        const args = process.argv.slice(2);
+        const mode = args[0]?.toLowerCase() || 'all';
 
-        if (initialized) {
-            await marketMaker.start();
+        switch (mode) {
+            case 'market-maker':
+                await botManager.startMarketMaker();
+                break;
+            case 'trading-bots':
+                await botManager.startTradingBots();
+                break;
+            case 'all':
+            default:
+                // Start market maker first
+                await botManager.startMarketMaker();
 
-            process.on('SIGINT', async () => {
-                console.log('Received SIGINT, shutting down...');
-                await marketMaker.stop();
-                process.exit(0);
-            });
+                // Wait for market maker to establish some orders
+                console.log('Waiting for market maker to establish orders...');
+                await new Promise(resolve => setTimeout(resolve, 10000));
 
-            process.on('SIGTERM', async () => {
-                console.log('Received SIGTERM, shutting down...');
-                await marketMaker.stop();
-                process.exit(0);
-            });
-        } else {
-            console.error('Failed to initialize market maker');
-            process.exit(1);
+                // Then start trading bots
+                await botManager.startTradingBots();
+                break;
         }
+
+        console.log(`Barista Bot System running in ${mode} mode`);
     } catch (error) {
         console.error('Unhandled error:', error);
         process.exit(1);

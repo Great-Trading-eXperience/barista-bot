@@ -1,7 +1,7 @@
 import { createPublicClient, createWalletClient, http, type Address, parseEther, parseUnits, formatUnits } from 'viem';
-import {anvil, arbitrum} from 'viem/chains';
-import config, {gtxRouterAbi, poolManagerAbi} from './config/config';
-import { Side, PoolKey, PriceVolumeResponse, PoolResponse, OrderResponse } from './types';
+import {anvil, arbitrum, mainnet} from 'viem/chains';
+import config, {gtxRouterAbi, poolManagerAbi} from '../config/config';
+import { Side, PoolKey, PriceVolumeResponse, PoolResponse, OrderResponse } from '../types';
 import axios from 'axios';
 
 const chain = anvil;
@@ -9,6 +9,11 @@ const chain = anvil;
 const publicClient = createPublicClient({
     chain: chain,
     transport: http(config.rpcUrl),
+});
+
+const ethClient = createPublicClient({
+    chain: mainnet,
+    transport: http("https://eth.llamarpc.com"),
 });
 
 const walletClient = createWalletClient({
@@ -26,9 +31,14 @@ export class MarketMaker {
 
     constructor() {
         this.config = config;
+
+        if (!config.baseToken || !config.quoteToken) {
+            throw new Error("Base token or quote token not defined in config");
+        }
+
         this.poolKey = {
-            baseCurrency: config.baseToken,
-            quoteCurrency: config.quoteToken,
+            baseCurrency: config.baseToken as Address,
+            quoteCurrency: config.quoteToken as Address,
         };
     }
 
@@ -54,9 +64,8 @@ export class MarketMaker {
                 abi: poolManagerAbi,
                 functionName: 'getPool',
                 args: [this.poolKey],
-            }) as PoolResponse;
+            });
 
-            console.log(`Pool found: OrderBook at ${pool.orderBook}`);
             return pool;
         } catch (error) {
             console.error('Error verifying pool:', error);
@@ -117,22 +126,11 @@ export class MarketMaker {
 
     private async updateMarketData() {
         try {
-            const bestBid = await this.getBestPrice(Side.BUY);
-            const bestAsk = await this.getBestPrice(Side.SELL);
+            const chainlinkPrice = await this.fetchChainlinkPrice();
 
-            if (bestBid.price > 0n && bestAsk.price > 0n) {
-                this.lastMidPrice = (bestBid.price + bestAsk.price) / 2n;
-                console.log(`Current mid price: ${formatUnits(this.lastMidPrice, 8)}`);
-            } else if (bestBid.price > 0n) {
-                this.lastMidPrice = bestBid.price;
-                console.log(`Using best bid as mid price: ${formatUnits(this.lastMidPrice, 8)}`);
-            } else if (bestAsk.price > 0n) {
-                this.lastMidPrice = bestAsk.price;
-                console.log(`Using best ask as mid price: ${formatUnits(this.lastMidPrice, 8)}`);
-            } else {
-                // TODO: No orders in the book, use Binance price feed
-                this.lastMidPrice = parseUnits('2000', 8);
-                console.log(`Using fallback price: 2000 USD`);
+            if (chainlinkPrice > 0n) {
+                this.lastMidPrice = chainlinkPrice;
+                console.log(`Using Chainlink price: ${formatUnits(chainlinkPrice, 8)} USD`);
             }
 
             await this.updateActiveOrders();
@@ -142,16 +140,41 @@ export class MarketMaker {
         }
     }
 
-    private async fetchBinancePrice(): Promise<number> {
+    private async fetchChainlinkPrice(): Promise<bigint> {
         try {
-            const response = await axios.get('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDC');
-            if (response.data && response.data.price) {
-                return parseFloat(response.data.price);
+            const chainlinkFeed = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
+            const response = await ethClient.readContract({
+                address: chainlinkFeed as Address,
+                abi: [
+                    {
+                        inputs: [],
+                        name: 'latestRoundData',
+                        outputs: [
+                            { name: 'roundId', type: 'uint80' },
+                            { name: 'answer', type: 'int256' },
+                            { name: 'startedAt', type: 'uint256' },
+                            { name: 'updatedAt', type: 'uint256' },
+                            { name: 'answeredInRound', type: 'uint80' }
+                        ],
+                        stateMutability: 'view',
+                        type: 'function'
+                    }
+                ],
+                functionName: 'latestRoundData'
+            });
+
+            const [, price, , updatedAt] = response;
+            const stalePriceThreshold = 3600; // 1 hour
+            const timestamp = Math.floor(Date.now() / 1000);
+
+            if (timestamp - Number(updatedAt) > stalePriceThreshold) {
+                throw new Error('Chainlink price is stale');
             }
-            throw new Error('Invalid response from Binance API');
+
+            return BigInt(price);
         } catch (error) {
-            console.error('Error fetching price from Binance:', error);
-            return 0;
+            console.error('Error fetching price from Chainlink:', error);
+            return 0n;
         }
     }
 
@@ -162,8 +185,13 @@ export class MarketMaker {
                 abi: gtxRouterAbi,
                 functionName: 'getBestPrice',
                 args: [this.poolKey, side],
-            }) as PriceVolumeResponse;
-            return result;
+            });
+
+            const typedResult = result as unknown as { price: bigint; volume: bigint };
+            return {
+                price: typedResult.price,
+                volume: typedResult.volume
+            };
         } catch (error) {
             console.error(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price:`, error);
             return { price: 0n, volume: 0n };
@@ -257,7 +285,7 @@ export class MarketMaker {
 
     private async placeOrder(side: Side, price: bigint, quantity: bigint) {
         try {
-            console.log(`Placing ${side === Side.BUY ? 'buy' : 'sell'} order at price ${formatUnits(price, 8)}`);
+            console.log(`Placing ${side === Side.BUY ? 'buy' : 'sell'} order at price ${formatUnits(price, 8)} USD with quantity ${formatUnits(quantity, 18)} ETH`);
 
             const tx = await walletClient.writeContract({
                 address: this.config.routerAddress,

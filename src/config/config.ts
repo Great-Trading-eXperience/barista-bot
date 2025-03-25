@@ -20,8 +20,8 @@ const config = {
     routerAddress: gtxRouterAddress as Address,
     balanceManagerAddress: balanceManagerAddress as Address,
 
-    baseToken: process.env.BASE_TOKEN_ADDRESS,
-    quoteToken: process.env.QUOTE_TOKEN_ADDRESS,
+    baseToken: process.env.BASE_TOKEN_ADDRESS as Address,
+    quoteToken: process.env.QUOTE_TOKEN_ADDRESS as Address,
 
     spreadPercentage: Number(process.env.SPREAD_PERCENTAGE || 0.2), // Default 0.2%
     orderSize: parseUnits(process.env.ORDER_SIZE || '0.1', 18), // Default 0.1 base token

@@ -24,3 +24,9 @@ export type OrderResponse = {
     price: bigint;
     quantity: bigint;
 };
+
+export enum IntervalType {
+    FAST = 'fast',
+    NORMAL = 'normal',
+    LONG = 'long'
+}
