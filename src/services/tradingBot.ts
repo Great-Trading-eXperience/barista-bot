@@ -1,18 +1,17 @@
 import { createPublicClient, createWalletClient, http, type Address, formatUnits } from 'viem';
-import { anvil } from 'viem/chains';
-import config, { gtxRouterAbi } from '../config/config';
-import {Side, PoolKey, PriceVolumeResponse, IntervalType} from '../types';
+import config, { gtxRouterAbi, getChainConfig } from '../config/config';
+import { Side, PoolKey, PriceVolumeResponse, IntervalType } from '../types';
 
-const chain = anvil;
+const chain = getChainConfig();
 
 const publicClient = createPublicClient({
     chain: chain,
-    transport: http(config.rpcUrl),
+    transport: http(chain.rpcUrls.default.http.toString()),
 });
 
 const walletClient = createWalletClient({
     chain: chain,
-    transport: http(config.rpcUrl),
+    transport: http(chain.rpcUrls.default.http.toString()),
     account: config.account,
 });
 
@@ -29,6 +28,9 @@ export class TradingBot {
         const envInterval = (process.env.TRADING_BOT_INTERVAL || 'normal').toLowerCase();
 
         switch (envInterval) {
+            case 'high_freq':
+                this.intervalType = IntervalType.HIGH_FREQ;
+                break;
             case 'fast':
                 this.intervalType = IntervalType.FAST;
                 break;
@@ -49,12 +51,12 @@ export class TradingBot {
 
         this.publicClient = createPublicClient({
             chain: chain,
-            transport: http(config.rpcUrl),
+            transport: http(chain.rpcUrls.default.http.toString()),
         });
 
         this.walletClient = createWalletClient({
             chain: chain,
-            transport: http(config.rpcUrl),
+            transport: http(chain.rpcUrls.default.http.toString()),
             account: this.account,
         });
     }
@@ -96,6 +98,8 @@ export class TradingBot {
 
     private getRandomInterval(): number {
         switch (this.intervalType) {
+            case IntervalType.HIGH_FREQ:
+                return 100; // 100 ms
             case IntervalType.FAST:
                 return 2000; // 2 seconds for fast
             case IntervalType.NORMAL:

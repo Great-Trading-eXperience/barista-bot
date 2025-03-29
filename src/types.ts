@@ -26,6 +26,7 @@ export type OrderResponse = {
 };
 
 export enum IntervalType {
+    HIGH_FREQ = 'high_freq',
     FAST = 'fast',
     NORMAL = 'normal',
     LONG = 'long'

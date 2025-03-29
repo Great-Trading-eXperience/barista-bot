@@ -1,24 +1,24 @@
-import { createPublicClient, createWalletClient, http, type Address, parseEther, parseUnits, formatUnits } from 'viem';
-import {anvil, arbitrum, mainnet} from 'viem/chains';
-import config, {gtxRouterAbi, poolManagerAbi} from '../config/config';
-import { Side, PoolKey, PriceVolumeResponse, PoolResponse, OrderResponse } from '../types';
-import axios from 'axios';
+import { createPublicClient, createWalletClient, http, type Address, parseEther, parseUnits, formatUnits, Chain, EIP1193RequestFn, TransportConfig} from 'viem';
+import {mainnet} from 'viem/chains';
+import config, {gtxRouterAbi, poolManagerAbi, getChainConfig} from '../config/config';
+import {Side, PoolKey, PriceVolumeResponse, PoolResponse, OrderResponse} from '../types';
+import {setup} from "../scripts/setup";
 
-const chain = anvil;
+const chain = getChainConfig();
 
 const publicClient = createPublicClient({
     chain: chain,
-    transport: http(config.rpcUrl),
+    transport: http(chain.rpcUrls.default.http.toString())
 });
 
 const ethClient = createPublicClient({
     chain: mainnet,
-    transport: http("https://eth.llamarpc.com"),
+    transport: http(config.mainnetRpcUrl),
 });
 
 const walletClient = createWalletClient({
     chain: chain,
-    transport: http(config.rpcUrl),
+    transport: http(chain.rpcUrls.default.http.toString()),
     account: config.account,
 });
 
@@ -74,8 +74,21 @@ export class MarketMaker {
     }
 
     private async checkAndApproveTokens() {
-        //NOTE: Call setup.ts
-        console.log('Token allowances verified');
+        try {
+            console.log('Checking token balances and approvals...');
+
+            const setupResult = await setup();
+
+            if (!setupResult) {
+                throw new Error('Failed to set up token balances and approvals');
+            }
+
+            console.log('Token balances and allowances verified');
+            return true;
+        } catch (error) {
+            console.error('Error checking and approving tokens:', error);
+            throw error;
+        }
     }
 
     async start() {
@@ -113,30 +126,73 @@ export class MarketMaker {
     private async performMarketMakingCycle() {
         console.log('Performing market making cycle...');
 
+        // Store previous mid price for comparison
+        const previousMidPrice = this.lastMidPrice;
+
+        // Update market data including the latest price
         await this.updateMarketData();
 
-        if (this.shouldReplaceOrders()) {
-            await this.cancelAllOrders();
+        // If no previous price (first run) or price deviation exceeds threshold, replace orders
+        if (previousMidPrice === 0n || this.isPriceDeviationSignificant(previousMidPrice, this.lastMidPrice)) {
+            console.log('Price deviation exceeds threshold, replacing orders');
+            await this.cancelAndReplaceOrders();
+        } else {
+            // Only place new orders where needed
+            await this.fillMissingOrders();
         }
-
-        await this.placeMakerOrders();
 
         console.log('Market making cycle completed');
     }
 
     private async updateMarketData() {
         try {
-            const chainlinkPrice = await this.fetchChainlinkPrice();
+            let price = 0n;
 
-            if (chainlinkPrice > 0n) {
-                this.lastMidPrice = chainlinkPrice;
-                console.log(`Using Chainlink price: ${formatUnits(chainlinkPrice, 8)} USD`);
+            if (this.config.useBinancePrice) {
+                price = await this.fetchBinancePrice();
+                if (price > 0n) {
+                    console.log(`Using Binance price: ${formatUnits(price, 8)} USD`);
+                }
+            }
+
+            // If Binance price failed or is not enabled, try Chainlink as fallback
+            if (price === 0n) {
+                price = await this.fetchChainlinkPrice();
+                if (price > 0n) {
+                    console.log(`Using Chainlink price: ${formatUnits(price, 8)} USD`);
+                }
+            }
+
+            if (price > 0n) {
+                this.lastMidPrice = price;
             }
 
             await this.updateActiveOrders();
-
         } catch (error) {
             console.error('Error updating market data:', error);
+        }
+    }
+
+    private async fetchBinancePrice(): Promise<bigint> {
+        try {
+            // Using public Binance API endpoint for ETH/USDC price
+            const response = await fetch('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDC');
+
+            if (!response.ok) {
+                throw new Error(`Binance API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data || !data.price) {
+                throw new Error('Invalid response from Binance API');
+            }
+
+            // Convert price to bigint with 8 decimal places (same as Chainlink format)
+            const price = parseFloat(data.price);
+            return BigInt(Math.round(price * 100000000));
+        } catch (error) {
+            console.error('Error fetching price from Binance:', error);
+            return 0n;
         }
     }
 
@@ -220,8 +276,79 @@ export class MarketMaker {
         }
     }
 
-    private shouldReplaceOrders(): boolean {
-        return true;
+
+    private isPriceDeviationSignificant(oldPrice: bigint, newPrice: bigint): boolean {
+        if (oldPrice === 0n || newPrice === 0n) return true;
+
+        // Calculate the absolute percentage difference
+        const priceDifference = oldPrice > newPrice
+            ? oldPrice - newPrice
+            : newPrice - oldPrice;
+
+        const deviationBps = (priceDifference * 10000n) / oldPrice;
+        const thresholdBps = BigInt(this.config.priceDeviationThresholdBps);
+
+        console.log(`Price deviation: ${Number(deviationBps)/100}% (threshold: ${Number(thresholdBps)/100}%)`);
+
+        return deviationBps > thresholdBps;
+    }
+
+    private async cancelAndReplaceOrders() {
+        await this.cancelAllOrders();
+        await this.placeMakerOrders();
+    }
+
+    private async fillMissingOrders() {
+        try {
+            // Retrieve current active orders
+            const userActiveOrders = await publicClient.readContract({
+                address: config.routerAddress,
+                abi: gtxRouterAbi,
+                functionName: 'getUserActiveOrders',
+                args: [this.poolKey, config.account.address],
+            }) as OrderResponse[];
+
+            // Count orders by side
+            const buyOrders = userActiveOrders.filter(order => order.price < this.lastMidPrice);
+            const sellOrders = userActiveOrders.filter(order => order.price > this.lastMidPrice);
+
+            console.log(`Current orders - Buy: ${buyOrders.length}, Sell: ${sellOrders.length}`);
+
+            // Calculate how many orders to add on each side
+            const buyOrdersToAdd = Math.max(0, this.config.maxOrdersPerSide - buyOrders.length);
+            const sellOrdersToAdd = Math.max(0, this.config.maxOrdersPerSide - sellOrders.length);
+
+            if (buyOrdersToAdd > 0 || sellOrdersToAdd > 0) {
+                console.log(`Adding missing orders - Buy: ${buyOrdersToAdd}, Sell: ${sellOrdersToAdd}`);
+
+                const spreadBasisPoints = BigInt(Math.round(this.config.spreadPercentage * 100));
+                const priceStepBasisPoints = BigInt(Math.round(this.config.priceStepPercentage * 100));
+
+                // Add missing buy orders
+                for (let i = 0; i < buyOrdersToAdd; i++) {
+                    // Calculate position for new order
+                    const position = this.config.maxOrdersPerSide - buyOrdersToAdd + i;
+                    const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(position));
+                    const buyPrice = this.lastMidPrice - (this.lastMidPrice * totalBasisPoints / 10000n);
+
+                    await this.placeOrder(Side.BUY, buyPrice, config.orderSize);
+                }
+
+                // Add missing sell orders
+                for (let i = 0; i < sellOrdersToAdd; i++) {
+                    // Calculate position for new order
+                    const position = this.config.maxOrdersPerSide - sellOrdersToAdd + i;
+                    const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(position));
+                    const sellPrice = this.lastMidPrice + (this.lastMidPrice * totalBasisPoints / 10000n);
+
+                    await this.placeOrder(Side.SELL, sellPrice, this.config.orderSize);
+                }
+            } else {
+                console.log('No new orders needed - order book already balanced');
+            }
+        } catch (error) {
+            console.error('Error filling missing orders:', error);
+        }
     }
 
     private async cancelAllOrders() {

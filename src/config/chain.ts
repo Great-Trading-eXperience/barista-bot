@@ -1,25 +1,49 @@
 import { defineChain } from 'viem'
 
-export const arbitrum = defineChain({
-    id: 42_161,
-    name: 'Arbitrum One',
+export const rise = defineChain({
+    id: 11155931,
+    name: 'RISE Testnet',
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: {
         default: {
-            http: ['https://arb1.arbitrum.io/rpc'],
+            http: ['https://testnet.riselabs.xyz'],
+            webSocket: ['wss://testnet.riselabs.xyz/ws']
         },
     },
     blockExplorers: {
         default: {
-            name: 'Arbiscan',
-            url: 'https://arbiscan.io',
-            apiUrl: 'https://api.arbiscan.io/api',
+            name: 'RISE Explorer',
+            url: 'https://testnet.explorer.riselabs.xyz',
         },
     },
     contracts: {
         multicall3: {
-            address: '0xca11bde05977b3631167028862be2a173976ca11',
-            blockCreated: 7654707,
+            address: '0x4200000000000000000000000000000000000013',  // Using standard L2 multicall address
+            blockCreated: 0,
+        },
+        l2StandardBridge: {
+            address: '0x4200000000000000000000000000000000000010',
+        },
+        l2CrossDomainMessenger: {
+            address: '0x4200000000000000000000000000000000000007',
         },
     },
+    testnet: true
+})
+
+export const espresso = defineChain({
+    id: 1020201,
+    name: 'GTX Espresso',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: {
+        default: {
+            http: ['https://157.173.201.26:8547'],
+        },
+    },
+    blockExplorers: {
+        default: {
+            name: 'Decaf Espresso',
+            url: 'https://explorer.decaf.testnet.espresso.network/',
+        },
+    }
 })

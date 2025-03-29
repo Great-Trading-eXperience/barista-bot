@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, http, parseEther, parseUnits, formatUnits, type Address, Account } from 'viem';
 import { anvil } from 'viem/chains';
-import config from '../config/config';
+import config, {getChainConfig} from '../config/config';
 import { erc20Abi } from '../abis/erc20Abi';
 
 const mockTokenAbi = [
@@ -17,7 +17,7 @@ const mockTokenAbi = [
     }
 ];
 
-const chain = anvil;
+const chain = getChainConfig();
 
 export async function setup(account?: Account) {
     const accountToUse = account || config.account;
@@ -25,12 +25,12 @@ export async function setup(account?: Account) {
 
     const publicClient = createPublicClient({
         chain: chain,
-        transport: http(config.rpcUrl),
+        transport: http(chain.rpcUrls.default.http.toString()),
     });
 
     const walletClient = createWalletClient({
         chain: chain,
-        transport: http(config.rpcUrl),
+        transport: http(chain.rpcUrls.default.http.toString()),
         account: accountToUse,
     });
 
