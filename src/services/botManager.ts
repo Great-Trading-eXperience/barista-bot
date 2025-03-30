@@ -1,8 +1,7 @@
-import { MarketMaker } from './marketMaker';
-import { TradingBot } from './tradingBot';
-import { setup } from '../scripts/setup';
-import { privateKeyToAccount } from 'viem/accounts';
-import config from "../config/config";
+import {MarketMaker} from './marketMaker';
+import {TradingBot} from './tradingBot';
+import {setup} from '../scripts/setup';
+import {privateKeyToAccount} from 'viem/accounts';
 import * as dotenv from "dotenv";
 
 dotenv.config();

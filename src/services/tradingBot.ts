@@ -1,27 +1,13 @@
-import { createPublicClient, createWalletClient, http, type Address, formatUnits } from 'viem';
-import config, { gtxRouterAbi, getChainConfig } from '../config/config';
-import { Side, PoolKey, PriceVolumeResponse, IntervalType } from '../types';
-
-const chain = getChainConfig();
-
-const publicClient = createPublicClient({
-    chain: chain,
-    transport: http(chain.rpcUrls.default.http.toString()),
-});
-
-const walletClient = createWalletClient({
-    chain: chain,
-    transport: http(chain.rpcUrls.default.http.toString()),
-    account: config.account,
-});
+import {type Address, formatUnits} from 'viem';
+import config from '../config/config';
+import {IntervalType, Side} from '../types';
+import {ContractService} from './contractService';
 
 export class TradingBot {
     private tradingInterval: NodeJS.Timeout | null = null;
-    private poolKey: PoolKey;
     private strategy: 'random' | 'momentum' | 'mean-reversion';
     private lastPrices: bigint[] = [];
-    private publicClient;
-    private walletClient;
+    private contractService: ContractService;
     private intervalType: IntervalType;
 
     constructor(private account = config.account) {
@@ -43,22 +29,8 @@ export class TradingBot {
                 break;
         }
 
-        this.poolKey = {
-            baseCurrency: config.baseToken as Address,
-            quoteCurrency: config.quoteToken as Address,
-        };
         this.strategy = "random";
-
-        this.publicClient = createPublicClient({
-            chain: chain,
-            transport: http(chain.rpcUrls.default.http.toString()),
-        });
-
-        this.walletClient = createWalletClient({
-            chain: chain,
-            transport: http(chain.rpcUrls.default.http.toString()),
-            account: this.account,
-        });
+        this.contractService = new ContractService(account);
     }
 
     randomizeStrategy() {
@@ -115,14 +87,15 @@ export class TradingBot {
 
     private async executeTrade() {
         try {
-            const midPrice = await this.getCurrentPrice();
-            if (!midPrice) return;
+            // Get current price info for strategy determination only
+            const currentPrice = await this.getCurrentPrice();
+            if (!currentPrice) return;
 
-            this.lastPrices.push(midPrice);
+            this.lastPrices.push(currentPrice);
             if (this.lastPrices.length > 10) this.lastPrices.shift();
 
             // Determine trade side based on strategy
-            const side = await this.determineTradeSide(midPrice);
+            const side = await this.determineTradeSide(currentPrice);
 
             // Calculate trade size (0.01 to 0.05 of config order size)
             const sizeMultiplier = 0.01 + Math.random() * 0.04;
@@ -130,14 +103,11 @@ export class TradingBot {
 
             console.log(`Executing ${side === Side.BUY ? 'buy' : 'sell'} trade with quantity ${formatUnits(quantity, 18)}`);
 
-            await this.walletClient.writeContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'placeMarketOrderWithDeposit',
-                args: [this.poolKey, midPrice, quantity, side],
-            });
+            const depositPrice = await this.contractService.getBestPrice(side === Side.BUY ? Side.SELL : Side.BUY);
+            const priceForDeposit = depositPrice.price > 0n ? depositPrice.price : currentPrice;
 
-            console.log('Trade executed successfully');
+            await this.contractService.placeMarketOrderWithDeposit(side, priceForDeposit, quantity);
+            console.log('Trade executed successfully with deposit');
         } catch (error) {
             console.error('Error executing trade:', error);
         }
@@ -145,8 +115,8 @@ export class TradingBot {
 
     private async getCurrentPrice(): Promise<bigint | null> {
         try {
-            const bestBid = await this.getBestPrice(Side.BUY);
-            const bestAsk = await this.getBestPrice(Side.SELL);
+            const bestBid = await this.contractService.getBestPrice(Side.BUY);
+            const bestAsk = await this.contractService.getBestPrice(Side.SELL);
 
             if (bestBid.price > 0n && bestAsk.price > 0n) {
                 return (bestBid.price + bestAsk.price) / 2n;
@@ -159,26 +129,6 @@ export class TradingBot {
         } catch (error) {
             console.error('Error getting current price:', error);
             return null;
-        }
-    }
-
-    async getBestPrice(side: Side): Promise<PriceVolumeResponse> {
-        try {
-            const result = await this.publicClient.readContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getBestPrice',
-                args: [this.poolKey, side],
-            });
-
-            const typedResult = result as unknown as { price: bigint; volume: bigint };
-            return {
-                price: typedResult.price,
-                volume: typedResult.volume
-            };
-        } catch (error) {
-            console.error(`Error getting best price:`, error);
-            return { price: 0n, volume: 0n };
         }
     }
 

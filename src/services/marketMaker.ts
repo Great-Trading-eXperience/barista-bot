@@ -1,45 +1,19 @@
-import { createPublicClient, createWalletClient, http, type Address, parseEther, parseUnits, formatUnits, Chain, EIP1193RequestFn, TransportConfig} from 'viem';
-import {mainnet} from 'viem/chains';
-import config, {gtxRouterAbi, poolManagerAbi, getChainConfig} from '../config/config';
-import {Side, PoolKey, PriceVolumeResponse, PoolResponse, OrderResponse} from '../types';
+import {formatUnits} from 'viem';
+import config from '../config/config';
+import {Side} from '../types';
 import {setup} from "../scripts/setup";
-
-const chain = getChainConfig();
-
-const publicClient = createPublicClient({
-    chain: chain,
-    transport: http(chain.rpcUrls.default.http.toString())
-});
-
-const ethClient = createPublicClient({
-    chain: mainnet,
-    transport: http(config.mainnetRpcUrl),
-});
-
-const walletClient = createWalletClient({
-    chain: chain,
-    transport: http(chain.rpcUrls.default.http.toString()),
-    account: config.account,
-});
+import {ContractService} from './contractService';
 
 export class MarketMaker {
     private priceRefreshInterval: NodeJS.Timeout | null = null;
-    private activeOrderIds: { [side: number]: string[] } = { [Side.BUY]: [], [Side.SELL]: [] };
+    private activeOrderIds: { [side: number]: string[] } = {[Side.BUY]: [], [Side.SELL]: []};
     private lastMidPrice: bigint = 0n;
-    private poolKey: PoolKey;
+    private contractService: ContractService;
     private config;
 
     constructor() {
         this.config = config;
-
-        if (!config.baseToken || !config.quoteToken) {
-            throw new Error("Base token or quote token not defined in config");
-        }
-
-        this.poolKey = {
-            baseCurrency: config.baseToken as Address,
-            quoteCurrency: config.quoteToken as Address,
-        };
+        this.contractService = new ContractService();
     }
 
     async initialize() {
@@ -47,29 +21,13 @@ export class MarketMaker {
         console.log(`Using network with chainId: ${config.chainId}`);
 
         try {
-            await this.verifyPool();
+            await this.contractService.verifyPool();
             await this.checkAndApproveTokens();
             console.log('Market maker initialized successfully');
             return true;
         } catch (error) {
             console.error('Failed to initialize market maker:', error);
             return false;
-        }
-    }
-
-    private async verifyPool() {
-        try {
-            const pool = await publicClient.readContract({
-                address: config.poolManagerAddress,
-                abi: poolManagerAbi,
-                functionName: 'getPool',
-                args: [this.poolKey],
-            });
-
-            return pool;
-        } catch (error) {
-            console.error('Error verifying pool:', error);
-            throw new Error('Pool does not exist');
         }
     }
 
@@ -157,7 +115,7 @@ export class MarketMaker {
 
             // If Binance price failed or is not enabled, try Chainlink as fallback
             if (price === 0n) {
-                price = await this.fetchChainlinkPrice();
+                price = await this.contractService.fetchChainlinkPrice();
                 if (price > 0n) {
                     console.log(`Using Chainlink price: ${formatUnits(price, 8)} USD`);
                 }
@@ -196,74 +154,11 @@ export class MarketMaker {
         }
     }
 
-    private async fetchChainlinkPrice(): Promise<bigint> {
-        try {
-            const chainlinkFeed = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
-            const response = await ethClient.readContract({
-                address: chainlinkFeed as Address,
-                abi: [
-                    {
-                        inputs: [],
-                        name: 'latestRoundData',
-                        outputs: [
-                            { name: 'roundId', type: 'uint80' },
-                            { name: 'answer', type: 'int256' },
-                            { name: 'startedAt', type: 'uint256' },
-                            { name: 'updatedAt', type: 'uint256' },
-                            { name: 'answeredInRound', type: 'uint80' }
-                        ],
-                        stateMutability: 'view',
-                        type: 'function'
-                    }
-                ],
-                functionName: 'latestRoundData'
-            });
-
-            const [, price, , updatedAt] = response;
-            const stalePriceThreshold = 3600; // 1 hour
-            const timestamp = Math.floor(Date.now() / 1000);
-
-            if (timestamp - Number(updatedAt) > stalePriceThreshold) {
-                throw new Error('Chainlink price is stale');
-            }
-
-            return BigInt(price);
-        } catch (error) {
-            console.error('Error fetching price from Chainlink:', error);
-            return 0n;
-        }
-    }
-
-    private async getBestPrice(side: Side): Promise<PriceVolumeResponse> {
-        try {
-            const result = await publicClient.readContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getBestPrice',
-                args: [this.poolKey, side],
-            });
-
-            const typedResult = result as unknown as { price: bigint; volume: bigint };
-            return {
-                price: typedResult.price,
-                volume: typedResult.volume
-            };
-        } catch (error) {
-            console.error(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price:`, error);
-            return { price: 0n, volume: 0n };
-        }
-    }
-
     private async updateActiveOrders() {
         try {
-            const userActiveOrders = await publicClient.readContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getUserActiveOrders',
-                args: [this.poolKey, config.account.address],
-            }) as OrderResponse[];
+            const userActiveOrders = await this.contractService.getUserActiveOrders();
 
-            this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
+            this.activeOrderIds = {[Side.BUY]: [], [Side.SELL]: []};
 
             for (const order of userActiveOrders) {
                 const side = order.price > this.lastMidPrice ? Side.SELL : Side.BUY;
@@ -276,7 +171,6 @@ export class MarketMaker {
         }
     }
 
-
     private isPriceDeviationSignificant(oldPrice: bigint, newPrice: bigint): boolean {
         if (oldPrice === 0n || newPrice === 0n) return true;
 
@@ -288,7 +182,7 @@ export class MarketMaker {
         const deviationBps = (priceDifference * 10000n) / oldPrice;
         const thresholdBps = BigInt(this.config.priceDeviationThresholdBps);
 
-        console.log(`Price deviation: ${Number(deviationBps)/100}% (threshold: ${Number(thresholdBps)/100}%)`);
+        console.log(`Price deviation: ${Number(deviationBps) / 100}% (threshold: ${Number(thresholdBps) / 100}%)`);
 
         return deviationBps > thresholdBps;
     }
@@ -301,12 +195,7 @@ export class MarketMaker {
     private async fillMissingOrders() {
         try {
             // Retrieve current active orders
-            const userActiveOrders = await publicClient.readContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getUserActiveOrders',
-                args: [this.poolKey, config.account.address],
-            }) as OrderResponse[];
+            const userActiveOrders = await this.contractService.getUserActiveOrders();
 
             // Count orders by side
             const buyOrders = userActiveOrders.filter(order => order.price < this.lastMidPrice);
@@ -355,27 +244,17 @@ export class MarketMaker {
         console.log('Cancelling all active orders...');
 
         try {
-            const userActiveOrders = await publicClient.readContract({
-                address: this.config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getUserActiveOrders',
-                args: [this.poolKey, this.config.account.address],
-            }) as OrderResponse[];
+            const userActiveOrders = await this.contractService.getUserActiveOrders();
 
             for (const order of userActiveOrders) {
                 const side = order.price > this.lastMidPrice ? Side.SELL : Side.BUY;
 
                 console.log(`Cancelling ${side === Side.BUY ? 'buy' : 'sell'} order ${order.id} at price ${formatUnits(order.price, 8)}`);
 
-                await walletClient.writeContract({
-                    address: this.config.routerAddress,
-                    abi: gtxRouterAbi,
-                    functionName: 'cancelOrder',
-                    args: [this.poolKey, side, order.price, order.id],
-                });
+                await this.contractService.cancelOrder(side, order.price, order.id);
             }
 
-            this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
+            this.activeOrderIds = {[Side.BUY]: [], [Side.SELL]: []};
             console.log('All orders cancelled');
         } catch (error) {
             console.error('Error cancelling orders:', error);
@@ -414,12 +293,7 @@ export class MarketMaker {
         try {
             console.log(`Placing ${side === Side.BUY ? 'buy' : 'sell'} order at price ${formatUnits(price, 8)} USD with quantity ${formatUnits(quantity, 18)} ETH`);
 
-            const tx = await walletClient.writeContract({
-                address: this.config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'placeOrderWithDeposit',
-                args: [this.poolKey, price, quantity, side],
-            });
+            const tx = await this.contractService.placeOrder(side, price, quantity);
 
             console.log(`Order placed, transaction: ${tx}`);
         } catch (error) {
