@@ -1,7 +1,7 @@
-import {type Address, createPublicClient, createWalletClient, http} from 'viem';
-import {mainnet} from 'viem/chains';
-import config, {getChainConfig, gtxRouterAbi, poolManagerAbi} from '../config/config';
-import {OrderResponse, PoolKey, PoolResponse, PriceVolumeResponse, Side} from '../types';
+import { type Address, createPublicClient, createWalletClient, http } from 'viem';
+import { mainnet } from 'viem/chains';
+import config, { getChainConfig, gtxRouterAbi, poolManagerAbi } from '../config/config';
+import { OrderResponse, PoolKey, PoolResponse, PriceVolumeResponse, Side } from '../types';
 
 export class ContractService {
     private publicClient;
@@ -12,6 +12,10 @@ export class ContractService {
     private pendingTransactions = 0;
     private transactionQueue: Array<() => Promise<any>> = [];
     private processingQueue = false;
+    public baseDecimals: number = 18; // Default, will be updated
+    public quoteDecimals: number = 18; // Default, will be updated
+    // Standard decimal precision used internally 
+    private readonly PRICE_DECIMALS = 8;
 
     constructor(private account = config.account) {
         const chain = getChainConfig();
@@ -36,6 +40,7 @@ export class ContractService {
             throw new Error("Base token or quote token not defined in config");
         }
 
+        // Initialize pool key without decimals first
         this.poolKey = {
             baseCurrency: config.baseToken as Address,
             quoteCurrency: config.quoteToken as Address,
@@ -68,7 +73,7 @@ export class ContractService {
                 address: config.routerAddress,
                 abi: gtxRouterAbi,
                 functionName: 'getBestPrice',
-                args: [this.poolKey, side],
+                args: [this.poolKey.baseCurrency, this.poolKey.quoteCurrency, side],
             });
 
             const typedResult = result as unknown as { price: bigint; volume: bigint };
@@ -78,7 +83,7 @@ export class ContractService {
             };
         } catch (error) {
             console.error(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price:`, error);
-            return {price: 0n, volume: 0n};
+            return { price: 0n, volume: 0n };
         }
     }
 
@@ -88,7 +93,7 @@ export class ContractService {
                 address: config.routerAddress,
                 abi: gtxRouterAbi,
                 functionName: 'getUserActiveOrders',
-                args: [this.poolKey, this.account.address],
+                args: [this.poolKey.baseCurrency, this.poolKey.quoteCurrency, this.account.address],
             });
 
             return userActiveOrders as OrderResponse[];
@@ -106,7 +111,13 @@ export class ContractService {
                         address: config.routerAddress,
                         abi: gtxRouterAbi,
                         functionName: 'cancelOrder',
-                        args: [this.poolKey, side, price, orderId],
+                        args: [
+                            this.poolKey.baseCurrency,
+                            this.poolKey.quoteCurrency,
+                            side,
+                            price,
+                            orderId
+                        ],
                     })
                 );
                 return tx;
@@ -125,7 +136,14 @@ export class ContractService {
                         address: config.routerAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeOrderWithDeposit',
-                        args: [this.poolKey, price, quantity, side],
+                        args: [
+                            this.poolKey.baseCurrency,
+                            this.poolKey.quoteCurrency,
+                            price,
+                            quantity,
+                            side,
+                            this.account.address
+                        ],
                     })
                 );
                 return tx;
@@ -144,7 +162,13 @@ export class ContractService {
                         address: config.routerAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeMarketOrder',
-                        args: [this.poolKey, quantity, side],
+                        args: [
+                            this.poolKey.baseCurrency,
+                            this.poolKey.quoteCurrency,
+                            quantity,
+                            side,
+                            this.account.address
+                        ],
                     })
                 );
                 return tx;
@@ -155,7 +179,7 @@ export class ContractService {
         });
     }
 
-    async placeMarketOrderWithDeposit(side: Side, price: bigint, quantity: bigint): Promise<`0x${string}`> {
+    async placeMarketOrderWithDeposit(side: Side, quantity: bigint): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
                 const tx = await this.executeWithNonce(
@@ -163,7 +187,13 @@ export class ContractService {
                         address: config.routerAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeMarketOrderWithDeposit',
-                        args: [this.poolKey, price, quantity, side],
+                        args: [
+                            this.poolKey.baseCurrency,
+                            this.poolKey.quoteCurrency,
+                            quantity,
+                            side,
+                            this.account.address
+                        ],
                     })
                 );
                 return tx;
@@ -184,11 +214,11 @@ export class ContractService {
                         inputs: [],
                         name: 'latestRoundData',
                         outputs: [
-                            {name: 'roundId', type: 'uint80'},
-                            {name: 'answer', type: 'int256'},
-                            {name: 'startedAt', type: 'uint256'},
-                            {name: 'updatedAt', type: 'uint256'},
-                            {name: 'answeredInRound', type: 'uint80'}
+                            { name: 'roundId', type: 'uint80' },
+                            { name: 'answer', type: 'int256' },
+                            { name: 'startedAt', type: 'uint256' },
+                            { name: 'updatedAt', type: 'uint256' },
+                            { name: 'answeredInRound', type: 'uint80' }
                         ],
                         stateMutability: 'view',
                         type: 'function'
@@ -335,5 +365,50 @@ export class ContractService {
         // If we've exhausted all retries
         console.error(`Failed after ${retries} attempts. Last error:`, lastError);
         throw lastError;
+    }
+
+    // Add method to fetch token decimals
+    async getTokenDecimals(tokenAddress: Address): Promise<number> {
+        try {
+            const decimals = await this.publicClient.readContract({
+                address: tokenAddress,
+                abi: [{
+                    inputs: [],
+                    name: 'decimals',
+                    outputs: [{ type: 'uint8', name: '' }],
+                    stateMutability: 'view',
+                    type: 'function'
+                }],
+                functionName: 'decimals',
+            });
+            return Number(decimals);
+        } catch (error) {
+            console.error(`Error fetching decimals for token ${tokenAddress}:`, error);
+            return 18; // Default to 18 if there's an error
+        }
+    }
+
+    // Initialize token decimals
+    async initializeTokenDecimals(): Promise<void> {
+        this.baseDecimals = await this.getTokenDecimals(this.poolKey.baseCurrency);
+        this.quoteDecimals = await this.getTokenDecimals(this.poolKey.quoteCurrency);
+
+        console.log(`Initialized token decimals - Base: ${this.baseDecimals}, Quote: ${this.quoteDecimals}`);
+    }
+
+    // Get decimals based on side
+    getDecimalsForSide(side: Side): number {
+        return side === Side.BUY ? this.quoteDecimals : this.baseDecimals;
+    }
+
+    // Format price using quote token decimals
+    formatPrice(price: bigint): bigint {
+        if (this.quoteDecimals === this.PRICE_DECIMALS) return price;
+
+        if (this.quoteDecimals < this.PRICE_DECIMALS) {
+            return price / BigInt(10 ** (this.PRICE_DECIMALS - this.quoteDecimals));
+        } else {
+            return price * BigInt(10 ** (this.quoteDecimals - this.PRICE_DECIMALS));
+        }
     }
 }

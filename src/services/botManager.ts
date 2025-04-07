@@ -1,7 +1,7 @@
-import {MarketMaker} from './marketMaker';
-import {TradingBot} from './tradingBot';
-import {setup} from '../scripts/setup';
-import {privateKeyToAccount} from 'viem/accounts';
+import { MarketMaker } from './marketMaker';
+import { TradingBot } from './tradingBot';
+import { setup } from '../scripts/setup';
+import { privateKeyToAccount } from 'viem/accounts';
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -15,7 +15,12 @@ export class BotManager {
 
         try {
             this.marketMaker = new MarketMaker();
-            await this.marketMaker.initialize();
+            const isInitiated = await this.marketMaker.initialize();
+
+            if (!isInitiated) {
+                throw new Error('Failed to initialize market maker');
+            }
+
             await this.marketMaker.start();
 
             console.log('Market maker started and providing liquidity');

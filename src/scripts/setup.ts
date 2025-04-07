@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, http, parseEther, parseUnits, formatUnits, type Address, Account } from 'viem';
 import { anvil } from 'viem/chains';
-import config, {getChainConfig} from '../config/config';
+import config, { getChainConfig } from '../config/config';
 import { erc20Abi } from '../abis/erc20Abi';
 
 const mockTokenAbi = [
@@ -48,13 +48,13 @@ export async function setup(account?: Account) {
         console.log(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC`);
 
         // Define minimum required balances
-        const minBaseBalance = parseEther('10000');
-        const minQuoteBalance = parseUnits('1000000', 6);
+        const minBaseBalance = parseEther('100000000000');
+        const minQuoteBalance = parseUnits('100000000000', 6);
 
         // Mint tokens if balance is insufficient
         if (baseTokenBalance < minBaseBalance) {
             console.log(`Minting ETH to ${accountToUse.address}...`);
-            const mintBaseAmount = parseEther('1000000');
+            const mintBaseAmount = parseEther('100000000000');
 
             await walletClient.writeContract({
                 address: baseToken,
@@ -68,7 +68,7 @@ export async function setup(account?: Account) {
 
         if (quoteTokenBalance < minQuoteBalance) {
             console.log(`Minting USDC to ${accountToUse.address}...`);
-            const mintQuoteAmount = parseUnits('1000000000000', 6);
+            const mintQuoteAmount = parseUnits('100000000000', 6);
 
             await walletClient.writeContract({
                 address: quoteToken,

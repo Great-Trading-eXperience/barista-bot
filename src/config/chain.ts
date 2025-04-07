@@ -47,3 +47,18 @@ export const espresso = defineChain({
         },
     }
 })
+
+export const anvilDev = defineChain({
+    id: 313371,
+    name: 'AnvilDev',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Ether',
+        symbol: 'ETH',
+    },
+    rpcUrls: {
+        default: {
+            http: ['https://anvil.gtx-fi.xyz'],
+        },
+    },
+})

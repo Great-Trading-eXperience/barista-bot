@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import { deployedContracts } from '../abis/deployedContracts';
 import { privateKeyToAccount } from "viem/accounts";
 import { anvil } from 'viem/chains';
-import { rise, espresso } from './chain';
+import { rise, espresso, anvilDev } from './chain';
 
 dotenv.config();
 
@@ -23,6 +23,8 @@ export function getChainConfig(): Chain {
             return rise;
         case 1020201:
             return espresso;
+        case 313371:
+            return anvilDev;
         case 31337:
         default:
             return anvil;

@@ -1,7 +1,7 @@
-import {type Address, formatUnits} from 'viem';
+import { type Address, formatEther, formatUnits } from 'viem';
 import config from '../config/config';
-import {IntervalType, Side} from '../types';
-import {ContractService} from './contractService';
+import { IntervalType, Side } from '../types';
+import { ContractService } from './contractService';
 
 export class TradingBot {
     private tradingInterval: NodeJS.Timeout | null = null;
@@ -42,6 +42,8 @@ export class TradingBot {
 
     async initialize() {
         console.log('Initializing trading bot...');
+        await this.contractService.initializeTokenDecimals();
+
         return true;
     }
 
@@ -97,16 +99,20 @@ export class TradingBot {
             // Determine trade side based on strategy
             const side = await this.determineTradeSide(currentPrice);
 
-            // Calculate trade size (0.01 to 0.05 of config order size)
-            const sizeMultiplier = 0.01 + Math.random() * 0.04;
-            const quantity = BigInt(Math.floor(Number(config.orderSize) * sizeMultiplier));
+            const minMultiplier = 0.01;
+            const maxMultiplier = 0.3;
+            const randomValue = Math.random() * (maxMultiplier - minMultiplier) + minMultiplier;
+            const selectedMultiplier = Math.round(randomValue * 100) / 100;
+            const quantity = BigInt(Math.floor(Number(config.orderSize) * selectedMultiplier));
 
-            console.log(`Executing ${side === Side.BUY ? 'buy' : 'sell'} trade with quantity ${formatUnits(quantity, 18)}`);
+            if (side === Side.BUY) {
+                console.log(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)`);
+                await this.contractService.placeMarketOrderWithDeposit(side, quantity);
+            } else {
+                console.log(`Executing sell order with ${formatEther(quantity)} base tokens (${selectedMultiplier * 100}% size)`);
+                await this.contractService.placeMarketOrderWithDeposit(side, quantity);
+            }
 
-            const depositPrice = await this.contractService.getBestPrice(side === Side.BUY ? Side.SELL : Side.BUY);
-            const priceForDeposit = depositPrice.price > 0n ? depositPrice.price : currentPrice;
-
-            await this.contractService.placeMarketOrderWithDeposit(side, priceForDeposit, quantity);
             console.log('Trade executed successfully with deposit');
         } catch (error) {
             console.error('Error executing trade:', error);

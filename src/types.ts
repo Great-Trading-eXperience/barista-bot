@@ -5,10 +5,12 @@ export enum Side {
     SELL = 1
 }
 
-export type PoolKey = {
+export interface PoolKey {
     baseCurrency: Address;
     quoteCurrency: Address;
-};
+    baseDecimals?: number;
+    quoteDecimals?: number;
+}
 
 export type PriceVolumeResponse = {
     price: bigint;
@@ -20,6 +22,7 @@ export type PoolResponse = {
 };
 
 export type OrderResponse = {
+    side: Side;
     id: string;
     price: bigint;
     quantity: bigint;

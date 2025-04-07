@@ -1,12 +1,12 @@
-import {formatUnits} from 'viem';
+import { formatUnits } from 'viem';
 import config from '../config/config';
-import {Side} from '../types';
-import {setup} from "../scripts/setup";
-import {ContractService} from './contractService';
+import { Side } from '../types';
+import { setup } from "../scripts/setup";
+import { ContractService } from './contractService';
 
 export class MarketMaker {
     private priceRefreshInterval: NodeJS.Timeout | null = null;
-    private activeOrderIds: { [side: number]: string[] } = {[Side.BUY]: [], [Side.SELL]: []};
+    private activeOrderIds: { [side: number]: string[] } = { [Side.BUY]: [], [Side.SELL]: [] };
     private lastMidPrice: bigint = 0n;
     private contractService: ContractService;
     private config;
@@ -16,12 +16,20 @@ export class MarketMaker {
         this.contractService = new ContractService();
     }
 
+    // Add this helper method after the constructor
+    private roundToNearestPriceIncrement(price: bigint): bigint {
+        // Convert to base units (6 decimals for USDC)
+        const minPriceIncrement = 10000n; // 0.01 USDC in 6 decimal format
+        return (price / minPriceIncrement) * minPriceIncrement;
+    }
+
     async initialize() {
         console.log('Initializing market maker bot...');
         console.log(`Using network with chainId: ${config.chainId}`);
 
         try {
             await this.contractService.verifyPool();
+            await this.contractService.initializeTokenDecimals();
             await this.checkAndApproveTokens();
             console.log('Market maker initialized successfully');
             return true;
@@ -131,9 +139,9 @@ export class MarketMaker {
         }
     }
 
+    // Modify the fetchBinancePrice method
     private async fetchBinancePrice(): Promise<bigint> {
         try {
-            // Using public Binance API endpoint for ETH/USDC price
             const response = await fetch('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDC');
 
             if (!response.ok) {
@@ -147,7 +155,9 @@ export class MarketMaker {
 
             // Convert price to bigint with 8 decimal places (same as Chainlink format)
             const price = parseFloat(data.price);
-            return BigInt(Math.round(price * 100000000));
+            // Convert to 6 decimal format and round to nearest 0.01
+            const priceIn6Decimals = Math.round(price * 100) * 10000; // Round to nearest 0.01
+            return BigInt(priceIn6Decimals) * 100n; // Convert from 6 decimals to 8 decimals
         } catch (error) {
             console.error('Error fetching price from Binance:', error);
             return 0n;
@@ -158,10 +168,11 @@ export class MarketMaker {
         try {
             const userActiveOrders = await this.contractService.getUserActiveOrders();
 
-            this.activeOrderIds = {[Side.BUY]: [], [Side.SELL]: []};
+            this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
 
             for (const order of userActiveOrders) {
-                const side = order.price > this.lastMidPrice ? Side.SELL : Side.BUY;
+                const formattedOrderPrice = this.contractService.formatPrice(order.price);
+                const side = formattedOrderPrice > this.lastMidPrice ? Side.SELL : Side.BUY;
                 this.activeOrderIds[side].push(order.id);
             }
 
@@ -198,8 +209,8 @@ export class MarketMaker {
             const userActiveOrders = await this.contractService.getUserActiveOrders();
 
             // Count orders by side
-            const buyOrders = userActiveOrders.filter(order => order.price < this.lastMidPrice);
-            const sellOrders = userActiveOrders.filter(order => order.price > this.lastMidPrice);
+            const buyOrders = userActiveOrders.filter(order => order.side === Side.BUY);
+            const sellOrders = userActiveOrders.filter(order => order.side === Side.SELL);
 
             console.log(`Current orders - Buy: ${buyOrders.length}, Sell: ${sellOrders.length}`);
 
@@ -220,7 +231,11 @@ export class MarketMaker {
                     const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(position));
                     const buyPrice = this.lastMidPrice - (this.lastMidPrice * totalBasisPoints / 10000n);
 
-                    await this.placeOrder(Side.BUY, buyPrice, config.orderSize);
+                    // Format the price before placing the order
+                    const formattedBuyPrice = this.roundToNearestPriceIncrement(
+                        this.contractService.formatPrice(buyPrice)
+                    );
+                    await this.placeOrder(Side.BUY, formattedBuyPrice, this.config.orderSize);
                 }
 
                 // Add missing sell orders
@@ -230,7 +245,11 @@ export class MarketMaker {
                     const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(position));
                     const sellPrice = this.lastMidPrice + (this.lastMidPrice * totalBasisPoints / 10000n);
 
-                    await this.placeOrder(Side.SELL, sellPrice, this.config.orderSize);
+                    // Format the price before placing the order
+                    const formattedSellPrice = this.roundToNearestPriceIncrement(
+                        this.contractService.formatPrice(sellPrice)
+                    );
+                    await this.placeOrder(Side.SELL, formattedSellPrice, this.config.orderSize);
                 }
             } else {
                 console.log('No new orders needed - order book already balanced');
@@ -247,20 +266,19 @@ export class MarketMaker {
             const userActiveOrders = await this.contractService.getUserActiveOrders();
 
             for (const order of userActiveOrders) {
-                const side = order.price > this.lastMidPrice ? Side.SELL : Side.BUY;
+                console.log(`Cancelling ${order.side === Side.BUY ? 'buy' : 'sell'} order ${order.id} at price ${formatUnits(order.price, 6)}`);
 
-                console.log(`Cancelling ${side === Side.BUY ? 'buy' : 'sell'} order ${order.id} at price ${formatUnits(order.price, 8)}`);
-
-                await this.contractService.cancelOrder(side, order.price, order.id);
+                await this.contractService.cancelOrder(order.side, order.price, order.id);
             }
 
-            this.activeOrderIds = {[Side.BUY]: [], [Side.SELL]: []};
+            this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
             console.log('All orders cancelled');
         } catch (error) {
             console.error('Error cancelling orders:', error);
         }
     }
 
+    // Modify the placeMakerOrders method
     private async placeMakerOrders() {
         if (this.lastMidPrice === 0n) {
             console.error('Cannot place orders: No mid price available');
@@ -276,14 +294,22 @@ export class MarketMaker {
             const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(i));
             const buyPrice = this.lastMidPrice - (this.lastMidPrice * totalBasisPoints / 10000n);
 
-            await this.placeOrder(Side.BUY, buyPrice, config.orderSize);
+            // Round to nearest 0.01 USDC
+            const formattedBuyPrice = this.roundToNearestPriceIncrement(
+                this.contractService.formatPrice(buyPrice)
+            );
+            await this.placeOrder(Side.BUY, formattedBuyPrice, config.orderSize);
         }
 
         for (let i = 0; i < this.config.maxOrdersPerSide; i++) {
             const totalBasisPoints = spreadBasisPoints + (priceStepBasisPoints * BigInt(i));
             const sellPrice = this.lastMidPrice + (this.lastMidPrice * totalBasisPoints / 10000n);
 
-            await this.placeOrder(Side.SELL, sellPrice, this.config.orderSize);
+            // Round to nearest 0.01 USDC
+            const formattedSellPrice = this.roundToNearestPriceIncrement(
+                this.contractService.formatPrice(sellPrice)
+            );
+            await this.placeOrder(Side.SELL, formattedSellPrice, config.orderSize);
         }
 
         console.log('Maker orders placed');
@@ -291,10 +317,15 @@ export class MarketMaker {
 
     private async placeOrder(side: Side, price: bigint, quantity: bigint) {
         try {
-            console.log(`Placing ${side === Side.BUY ? 'buy' : 'sell'} order at price ${formatUnits(price, 8)} USD with quantity ${formatUnits(quantity, 18)} ETH`);
+            const decimals = this.contractService.getDecimalsForSide(side);
+
+            if (side === Side.BUY) {
+                console.log(`Placing buy order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} quote tokens`);
+            } else {
+                console.log(`Placing sell order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} base tokens`);
+            }
 
             const tx = await this.contractService.placeOrder(side, price, quantity);
-
             console.log(`Order placed, transaction: ${tx}`);
         } catch (error) {
             console.error(`Error placing ${side === Side.BUY ? 'buy' : 'sell'} order:`, error);
