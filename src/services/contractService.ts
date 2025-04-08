@@ -103,9 +103,11 @@ export class ContractService {
         }
     }
 
-    async cancelOrder(side: Side, price: bigint, orderId: string): Promise<`0x${string}`> {
+    async cancelOrder(orderId: string): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
+                const orderIdBigInt = BigInt(orderId);
+
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
                         address: config.routerAddress,
@@ -114,9 +116,7 @@ export class ContractService {
                         args: [
                             this.poolKey.baseCurrency,
                             this.poolKey.quoteCurrency,
-                            side,
-                            price,
-                            orderId
+                            orderIdBigInt
                         ],
                     })
                 );

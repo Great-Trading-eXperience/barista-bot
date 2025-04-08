@@ -263,13 +263,17 @@ export class MarketMaker {
         console.log('Cancelling all active orders...');
 
         try {
-            const userActiveOrders = await this.contractService.getUserActiveOrders();
+            const orders = await this.contractService.getUserActiveOrders();
 
-            for (const order of userActiveOrders) {
-                console.log(`Cancelling ${order.side === Side.BUY ? 'buy' : 'sell'} order ${order.id} at price ${formatUnits(order.price, 6)}`);
-
-                await this.contractService.cancelOrder(order.side, order.price, order.id);
-            }
+            await Promise.all(orders.map(async (order) => {
+                const sideText = order.side === Side.BUY ? 'buy' : 'sell';
+                try {
+                    console.log(`Cancelling ${sideText} order ${order.id}`);
+                    await this.contractService.cancelOrder(order.id);
+                } catch (error) {
+                    console.error(`Error cancelling order ${order.id}:`, error);
+                }
+            }));
 
             this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
             console.log('All orders cancelled');
