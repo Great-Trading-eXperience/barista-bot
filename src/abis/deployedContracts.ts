@@ -16,10 +16,9 @@ interface DeployedContracts {
 }
 
 export const deployedContracts: DeployedContracts = {
-  10143: {},
-  31337: {
+  31338: {
     BalanceManager: {
-      address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+      address: "0x13fc4f19dcad64c9f25b1890adee552aeb61c033",
       abi: [
         {
           type: "constructor",
@@ -698,7 +697,7 @@ export const deployedContracts: DeployedContracts = {
       },
     },
     PoolManager: {
-      address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      address: "0x41bcbaa436b23fe4b74efcb53c768e6822a970a5",
       abi: [
         {
           type: "constructor",
@@ -1323,10 +1322,28 @@ export const deployedContracts: DeployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        owner: "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        renounceOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        transferOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        addCommonIntermediary: "src/interfaces/IPoolManager.sol",
+        createPool: "src/interfaces/IPoolManager.sol",
+        createPoolKey: "src/interfaces/IPoolManager.sol",
+        getAllCurrencies: "src/interfaces/IPoolManager.sol",
+        getCommonIntermediaries: "src/interfaces/IPoolManager.sol",
+        getPool: "src/interfaces/IPoolManager.sol",
+        getPoolId: "src/interfaces/IPoolManager.sol",
+        getPoolLiquidityScore: "src/interfaces/IPoolManager.sol",
+        poolExists: "src/interfaces/IPoolManager.sol",
+        removeCommonIntermediary: "src/interfaces/IPoolManager.sol",
+        setRouter: "src/interfaces/IPoolManager.sol",
+        updatePoolLiquidity: "src/interfaces/IPoolManager.sol",
+      },
     },
     GTXRouter: {
-      address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+      address: "0x837312482e1a50a23cc16fc90c34c0e586c52291",
       abi: [
         {
           type: "constructor",
@@ -1975,11 +1992,8 @@ export const deployedContracts: DeployedContracts = {
       ],
       inheritedFunctions: {},
     },
-  },
-  1020201: {},
-  11155931: {
     MockToken: {
-      address: "0x9d4e69fd965c99f0709a1d0a43d28fdeb3796f7e",
+      address: "0x1b9af473f8ef3cb20689be6b9f401c51aa407123",
       abi: [
         {
           type: "constructor",
@@ -2344,4 +2358,5 @@ export const deployedContracts: DeployedContracts = {
       },
     },
   },
+  313371: {},
 } as const;

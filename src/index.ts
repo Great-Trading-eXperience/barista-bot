@@ -2,7 +2,7 @@
 import { BotManager } from './services/botManager';
 
 async function main() {
-    console.log('Starting Barista Bot System');
+    process.stdout.write('Starting Barista Bot System\n');
 
     const botManager = new BotManager();
 
@@ -24,7 +24,7 @@ async function main() {
                 await botManager.startMarketMaker();
 
                 // Wait for market maker to establish some orders
-                console.log('Waiting for market maker to establish orders...');
+                process.stdout.write('Waiting for market maker to establish orders...\n');
                 await new Promise(resolve => setTimeout(resolve, 10000));
 
                 // Then start trading bots
@@ -32,9 +32,9 @@ async function main() {
                 break;
         }
 
-        console.log(`Barista Bot System running in ${mode} mode`);
+        process.stdout.write(`Barista Bot System running in ${mode} mode\n`);
     } catch (error) {
-        console.error('Unhandled error:', error);
+        process.stdout.write(`Unhandled error: ${error}\n`);
         process.exit(1);
     }
 }

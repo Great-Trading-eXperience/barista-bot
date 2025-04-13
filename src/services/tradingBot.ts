@@ -36,38 +36,38 @@ export class TradingBot {
     randomizeStrategy() {
         const strategies = ['random', 'momentum', 'mean-reversion'];
         const randomIndex = Math.floor(Math.random() * strategies.length);
-        console.log(`Using strategy: ${strategies[randomIndex]}`);
+        process.stdout.write(`Using strategy: ${strategies[randomIndex]}\n`);
         return strategies[randomIndex] as 'random' | 'momentum' | 'mean-reversion';
     }
 
     async initialize() {
-        console.log('Initializing trading bot...');
+        process.stdout.write('Initializing trading bot...\n');
         await this.contractService.initializeTokenDecimals();
 
         return true;
     }
 
     async start() {
-        console.log('Starting trading bot...');
+        process.stdout.write('Starting trading bot...\n');
 
         this.tradingInterval = setInterval(async () => {
             try {
                 await this.executeTrade();
             } catch (error) {
-                console.error('Error executing trade:', error);
+                process.stdout.write(`Error executing trade: ${error}\n`);
             }
         }, this.getRandomInterval());
     }
 
     async stop() {
-        console.log('Stopping trading bot...');
+        process.stdout.write('Stopping trading bot...\n');
 
         if (this.tradingInterval) {
             clearInterval(this.tradingInterval);
             this.tradingInterval = null;
         }
 
-        console.log('Trading bot stopped');
+        process.stdout.write('Trading bot stopped\n');
     }
 
     private getRandomInterval(): number {
@@ -106,16 +106,16 @@ export class TradingBot {
             const quantity = BigInt(Math.floor(Number(config.orderSize) * selectedMultiplier));
 
             if (side === Side.BUY) {
-                console.log(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)`);
+                process.stdout.write(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)\n`);
                 await this.contractService.placeMarketOrderWithDeposit(side, quantity);
             } else {
-                console.log(`Executing sell order with ${formatEther(quantity)} base tokens (${selectedMultiplier * 100}% size)`);
+                process.stdout.write(`Executing sell order with ${formatEther(quantity)} base tokens (${selectedMultiplier * 100}% size)\n`);
                 await this.contractService.placeMarketOrderWithDeposit(side, quantity);
             }
 
-            console.log('Trade executed successfully with deposit');
+            process.stdout.write('Trade executed successfully with deposit\n');
         } catch (error) {
-            console.error('Error executing trade:', error);
+            process.stdout.write(`Error executing trade: ${error}\n`);
         }
     }
 
@@ -133,7 +133,7 @@ export class TradingBot {
             }
             return null;
         } catch (error) {
-            console.error('Error getting current price:', error);
+            process.stdout.write(`Error getting current price: ${error}\n`);
             return null;
         }
     }

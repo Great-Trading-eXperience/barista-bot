@@ -21,7 +21,7 @@ const chain = getChainConfig();
 
 export async function setup(account?: Account) {
     const accountToUse = account || config.account;
-    console.log(`Setting up tokens and approvals for account ${accountToUse.address}...`);
+    process.stdout.write(`Setting up tokens and approvals for account ${accountToUse.address}...\n`);
 
     const publicClient = createPublicClient({
         chain: chain,
@@ -43,9 +43,9 @@ export async function setup(account?: Account) {
         const baseTokenBalance = await getTokenBalance(baseToken, accountToUse.address);
         const quoteTokenBalance = await getTokenBalance(quoteToken, accountToUse.address);
 
-        console.log(`Current balances for ${accountToUse.address}:`);
-        console.log(`- Base token (ETH): ${formatUnits(baseTokenBalance, 18)} ETH`);
-        console.log(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC`);
+        process.stdout.write(`Current balances for ${accountToUse.address}:\n`);
+        process.stdout.write(`- Base token (ETH): ${formatUnits(baseTokenBalance, 18)} ETH\n`);
+        process.stdout.write(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC\n`);
 
         // Define minimum required balances
         const minBaseBalance = parseEther('100000000000');
@@ -53,7 +53,7 @@ export async function setup(account?: Account) {
 
         // Mint tokens if balance is insufficient
         if (baseTokenBalance < minBaseBalance) {
-            console.log(`Minting ETH to ${accountToUse.address}...`);
+            process.stdout.write(`Minting ETH to ${accountToUse.address}...\n`);
             const mintBaseAmount = parseEther('100000000000');
 
             await walletClient.writeContract({
@@ -63,11 +63,11 @@ export async function setup(account?: Account) {
                 args: [accountToUse.address, mintBaseAmount],
             });
         } else {
-            console.log(`Base token balance is sufficient.`);
+            process.stdout.write(`Base token balance is sufficient.\n`);
         }
 
         if (quoteTokenBalance < minQuoteBalance) {
-            console.log(`Minting USDC to ${accountToUse.address}...`);
+            process.stdout.write(`Minting USDC to ${accountToUse.address}...\n`);
             const mintQuoteAmount = parseUnits('100000000000', 6);
 
             await walletClient.writeContract({
@@ -77,7 +77,7 @@ export async function setup(account?: Account) {
                 args: [accountToUse.address, mintQuoteAmount],
             });
         } else {
-            console.log(`Quote token balance is sufficient.`);
+            process.stdout.write(`Quote token balance is sufficient.\n`);
         }
 
         // Check current allowances
@@ -89,7 +89,7 @@ export async function setup(account?: Account) {
 
         // Approve tokens if allowance is insufficient
         if (baseAllowance < minAllowance) {
-            console.log(`Approving ETH for balance manager...`);
+            process.stdout.write(`Approving ETH for balance manager...\n`);
             await walletClient.writeContract({
                 address: baseToken,
                 abi: erc20Abi,
@@ -97,11 +97,11 @@ export async function setup(account?: Account) {
                 args: [balanceManagerAddress, maxUint256],
             });
         } else {
-            console.log(`Base token allowance is sufficient.`);
+            process.stdout.write(`Base token allowance is sufficient.\n`);
         }
 
         if (quoteAllowance < minAllowance) {
-            console.log(`Approving USDC for balance manager...`);
+            process.stdout.write(`Approving USDC for balance manager...\n`);
             await walletClient.writeContract({
                 address: quoteToken,
                 abi: erc20Abi,
@@ -109,13 +109,13 @@ export async function setup(account?: Account) {
                 args: [balanceManagerAddress, maxUint256],
             });
         } else {
-            console.log(`Quote token allowance is sufficient.`);
+            process.stdout.write(`Quote token allowance is sufficient.\n`);
         }
 
-        console.log(`Setup completed successfully for ${accountToUse.address}`);
+        process.stdout.write(`Setup completed successfully for ${accountToUse.address}\n`);
         return true;
     } catch (error) {
-        console.error('Error during setup:', error);
+        process.stdout.write(`Error during setup: ${error}\n`);
         return false;
     }
 
@@ -143,7 +143,7 @@ if (require.main === module) {
     setup()
         .then(() => process.exit(0))
         .catch((error) => {
-            console.error('Unhandled error in setup:', error);
+            process.stdout.write(`Unhandled error in setup: ${error}\n`);
             process.exit(1);
         });
 }

@@ -11,7 +11,7 @@ export class BotManager {
     private tradingBots: TradingBot[] = [];
 
     async startMarketMaker(): Promise<void> {
-        console.log('Starting Market Maker');
+        process.stdout.write('Starting Market Maker\n');
 
         try {
             this.marketMaker = new MarketMaker();
@@ -23,18 +23,18 @@ export class BotManager {
 
             await this.marketMaker.start();
 
-            console.log('Market maker started and providing liquidity');
+            process.stdout.write('Market maker started and providing liquidity\n');
             this.setupShutdownHandlers();
 
             return Promise.resolve();
         } catch (error) {
-            console.error('Error starting market maker:', error);
+            process.stdout.write(`Error starting market maker: ${error}\n`);
             throw error;
         }
     }
 
     async startTradingBots(): Promise<void> {
-        console.log('Starting Trading Bots');
+        process.stdout.write('Starting Trading Bots\n');
 
         try {
             const botAccounts = [];
@@ -52,13 +52,13 @@ export class BotManager {
             }
 
             if (botAccounts.length === 0) {
-                console.warn('No trading bot private keys found in .env file');
+                process.stdout.write('No trading bot private keys found in .env file\n');
                 return Promise.resolve();
             }
 
             // Setup and start each trading bot
             for (const account of botAccounts) {
-                console.log(`Setting up trading bot for account ${account.address}`);
+                process.stdout.write(`Setting up trading bot for account ${account.address}\n`);
 
                 // Run setup for this account
                 await setup(account);
@@ -69,18 +69,18 @@ export class BotManager {
                 await tradingBot.start();
 
                 this.tradingBots.push(tradingBot);
-                console.log(`Trading bot started for account ${account.address}`);
+                process.stdout.write(`Trading bot started for account ${account.address}\n`);
 
                 // Small delay between starting bots
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            console.log(`${this.tradingBots.length} trading bots running`);
+            process.stdout.write(`${this.tradingBots.length} trading bots running\n`);
             this.setupShutdownHandlers();
 
             return Promise.resolve();
         } catch (error) {
-            console.error('Error starting trading bots:', error);
+            process.stdout.write(`Error starting trading bots: ${error}\n`);
             throw error;
         }
     }
@@ -88,13 +88,13 @@ export class BotManager {
     private setupShutdownHandlers(): void {
         // Handle graceful shutdown
         process.on('SIGINT', async () => {
-            console.log('Received SIGINT, shutting down...');
+            process.stdout.write('Received SIGINT, shutting down...\n');
             await this.shutdown();
             process.exit(0);
         });
 
         process.on('SIGTERM', async () => {
-            console.log('Received SIGTERM, shutting down...');
+            process.stdout.write('Received SIGTERM, shutting down...\n');
             await this.shutdown();
             process.exit(0);
         });
@@ -103,13 +103,13 @@ export class BotManager {
     private async shutdown(): Promise<void> {
         // Stop all trading bots
         for (const bot of this.tradingBots) {
-            console.log(`Stopping bot for account ${bot.getAccountAddress()}`);
+            process.stdout.write(`Stopping bot for account ${bot.getAccountAddress()}\n`);
             await bot.stop();
         }
 
         // Stop market maker if it's running
         if (this.marketMaker) {
-            console.log('Stopping market maker');
+            process.stdout.write('Stopping market maker\n');
             await this.marketMaker.stop();
         }
     }

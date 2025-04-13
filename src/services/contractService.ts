@@ -62,7 +62,7 @@ export class ContractService {
 
             return pool as unknown as PoolResponse;
         } catch (error) {
-            console.error('Error verifying pool:', error);
+            process.stdout.write(`Error verifying pool: ${error}\n`);
             throw new Error('Pool does not exist');
         }
     }
@@ -82,7 +82,7 @@ export class ContractService {
                 volume: typedResult.volume
             };
         } catch (error) {
-            console.error(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price:`, error);
+            process.stdout.write(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price: ${error}\n`);
             return { price: 0n, volume: 0n };
         }
     }
@@ -98,7 +98,7 @@ export class ContractService {
 
             return userActiveOrders as OrderResponse[];
         } catch (error) {
-            console.error('Error getting user active orders:', error);
+            process.stdout.write(`Error getting user active orders: ${error}\n`);
             throw error;
         }
     }
@@ -122,7 +122,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                console.error('Error cancelling order:', error);
+                process.stdout.write(`Error cancelling order: ${error}\n`);
                 throw error;
             }
         });
@@ -148,7 +148,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                console.error(`Error placing ${side === Side.BUY ? 'buy' : 'sell'} order:`, error);
+                process.stdout.write(`Error placing ${side === Side.BUY ? 'buy' : 'sell'} order: ${error}\n`);
                 throw error;
             }
         });
@@ -173,7 +173,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                console.error(`Error placing market order:`, error);
+                process.stdout.write(`Error placing market order: ${error}\n`);
                 throw error;
             }
         });
@@ -198,7 +198,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                console.error(`Error placing market order with deposit:`, error);
+                process.stdout.write(`Error placing market order with deposit: ${error}\n`);
                 throw error;
             }
         });
@@ -237,7 +237,7 @@ export class ContractService {
 
             return BigInt(price);
         } catch (error) {
-            console.error('Error fetching price from Chainlink:', error);
+            process.stdout.write(`Error fetching price from Chainlink: ${error}\n`);
             return 0n;
         }
     }
@@ -273,7 +273,7 @@ export class ContractService {
                 await txFunc();
             }
         } catch (error) {
-            console.error("Error processing transaction queue:", error);
+            process.stdout.write(`Error processing transaction queue: ${error}\n`);
         } finally {
             this.processingQueue = false;
 
@@ -294,7 +294,7 @@ export class ContractService {
             this.currentNonce = await this.publicClient.getTransactionCount({
                 address: this.account.address,
             });
-            console.log(`Initial nonce for ${this.account.address}: ${this.currentNonce}`);
+            process.stdout.write(`Initial nonce for ${this.account.address}: ${this.currentNonce}\n`);
         }
 
         let attempt = 0;
@@ -315,12 +315,12 @@ export class ContractService {
                                 address: this.account.address,
                             });
                             if (this.currentNonce !== null && networkNonce > this.currentNonce) {
-                                console.log(`Syncing nonce from ${this.currentNonce} to network nonce ${networkNonce}`);
+                                process.stdout.write(`Syncing nonce from ${this.currentNonce} to network nonce ${networkNonce}\n`);
                                 this.currentNonce = networkNonce;
                             }
                             this.pendingTransactions = 0;
                         } catch (e) {
-                            console.error("Error updating nonce from network:", e);
+                            process.stdout.write(`Error updating nonce from network: ${e}\n`);
                         }
                     }, 2000); // Wait a bit for transactions to propagate
                 }
@@ -336,34 +336,34 @@ export class ContractService {
                     errorMsg.includes("replacement transaction underpriced") ||
                     errorMsg.includes("already known")
                 ) {
-                    console.warn(`Nonce issue detected (attempt ${attempt + 1}/${retries}): ${errorMsg}`);
+                    process.stdout.write(`Nonce issue detected (attempt ${attempt + 1}/${retries}): ${errorMsg}\n`);
 
                     // Update nonce from the network
                     try {
                         const networkNonce = await this.publicClient.getTransactionCount({
                             address: this.account.address,
                         });
-                        console.log(`Current nonce: ${this.currentNonce}, Network nonce: ${networkNonce}`);
+                        process.stdout.write(`Current nonce: ${this.currentNonce}, Network nonce: ${networkNonce}\n`);
                         this.currentNonce = networkNonce;
                     } catch (e) {
-                        console.error("Error fetching network nonce:", e);
+                        process.stdout.write(`Error fetching network nonce: ${e}\n`);
                     }
 
                     // Exponential backoff
                     const delay = Math.pow(2, attempt) * 1000;
-                    console.log(`Retrying in ${delay}ms...`);
+                    process.stdout.write(`Retrying in ${delay}ms...\n`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     attempt++;
                 } else {
                     // If it's not a nonce issue, just throw the error
-                    console.error("Transaction error (not nonce-related):", error);
+                    process.stdout.write(`Transaction error (not nonce-related): ${error}\n`);
                     throw error;
                 }
             }
         }
 
         // If we've exhausted all retries
-        console.error(`Failed after ${retries} attempts. Last error:`, lastError);
+        process.stdout.write(`Failed after ${retries} attempts. Last error: ${lastError}\n`);
         throw lastError;
     }
 
@@ -383,7 +383,7 @@ export class ContractService {
             });
             return Number(decimals);
         } catch (error) {
-            console.error(`Error fetching decimals for token ${tokenAddress}:`, error);
+            process.stdout.write(`Error fetching decimals for token ${tokenAddress}: ${error}\n`);
             return 18; // Default to 18 if there's an error
         }
     }
@@ -393,7 +393,7 @@ export class ContractService {
         this.baseDecimals = await this.getTokenDecimals(this.poolKey.baseCurrency);
         this.quoteDecimals = await this.getTokenDecimals(this.poolKey.quoteCurrency);
 
-        console.log(`Initialized token decimals - Base: ${this.baseDecimals}, Quote: ${this.quoteDecimals}`);
+        process.stdout.write(`Initialized token decimals - Base: ${this.baseDecimals}, Quote: ${this.quoteDecimals}\n`);
     }
 
     // Get decimals based on side

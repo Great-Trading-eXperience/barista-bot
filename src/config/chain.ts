@@ -49,7 +49,7 @@ export const espresso = defineChain({
 })
 
 export const anvilDev = defineChain({
-    id: 313371,
+    id: 31338,
     name: 'AnvilDev',
     nativeCurrency: {
         decimals: 18,
@@ -58,7 +58,7 @@ export const anvilDev = defineChain({
     },
     rpcUrls: {
         default: {
-            http: ['https://anvil.gtx-fi.xyz'],
+            http: ['https://gtx-anvil.bobbyfiando.com'],
         },
     },
 })
