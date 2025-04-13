@@ -18,7 +18,7 @@ interface DeployedContracts {
 export const deployedContracts: DeployedContracts = {
   31338: {
     BalanceManager: {
-      address: "0x13fc4f19dcad64c9f25b1890adee552aeb61c033",
+      address: "0x8af86badb0a9b0cffcacd776f56d6aa5faed623f",
       abi: [
         {
           type: "constructor",
@@ -697,7 +697,7 @@ export const deployedContracts: DeployedContracts = {
       },
     },
     PoolManager: {
-      address: "0x41bcbaa436b23fe4b74efcb53c768e6822a970a5",
+      address: "0x168ee7cc5166d7b5d51de804a9d6eaf2b75a825e",
       abi: [
         {
           type: "constructor",
@@ -1343,7 +1343,7 @@ export const deployedContracts: DeployedContracts = {
       },
     },
     GTXRouter: {
-      address: "0x837312482e1a50a23cc16fc90c34c0e586c52291",
+      address: "0xd7b5d2fcdfae3323d25ce9a49d0d50665ade6686",
       abi: [
         {
           type: "constructor",
@@ -1993,7 +1993,7 @@ export const deployedContracts: DeployedContracts = {
       inheritedFunctions: {},
     },
     MockToken: {
-      address: "0x1b9af473f8ef3cb20689be6b9f401c51aa407123",
+      address: "0xa4fcb1106ca30188302d1737d7e5e7ec44db4397",
       abi: [
         {
           type: "constructor",
