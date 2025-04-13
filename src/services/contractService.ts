@@ -2,6 +2,7 @@ import { type Address, createPublicClient, createWalletClient, http } from 'viem
 import { mainnet } from 'viem/chains';
 import config, { getChainConfig, gtxRouterAbi, poolManagerAbi } from '../config/config';
 import { OrderResponse, PoolKey, PoolResponse, PriceVolumeResponse, Side } from '../types';
+import logger from '../utils/logger';
 
 export class ContractService {
     private publicClient;
@@ -62,7 +63,7 @@ export class ContractService {
 
             return pool as unknown as PoolResponse;
         } catch (error) {
-            process.stdout.write(`Error verifying pool: ${error}\n`);
+            logger.error({ error }, 'Error verifying pool');
             throw new Error('Pool does not exist');
         }
     }
@@ -82,7 +83,7 @@ export class ContractService {
                 volume: typedResult.volume
             };
         } catch (error) {
-            process.stdout.write(`Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price: ${error}\n`);
+            logger.error({ error, side: side === Side.BUY ? 'bid' : 'ask' }, `Error getting best ${side === Side.BUY ? 'bid' : 'ask'} price`);
             return { price: 0n, volume: 0n };
         }
     }
@@ -98,7 +99,7 @@ export class ContractService {
 
             return userActiveOrders as OrderResponse[];
         } catch (error) {
-            process.stdout.write(`Error getting user active orders: ${error}\n`);
+            logger.error({ error: error }, 'Error getting user active orders');
             throw error;
         }
     }
@@ -122,7 +123,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                process.stdout.write(`Error cancelling order: ${error}\n`);
+                logger.error({ error, orderId }, 'Error cancelling order');
                 throw error;
             }
         });
@@ -148,7 +149,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                process.stdout.write(`Error placing ${side === Side.BUY ? 'buy' : 'sell'} order: ${error}\n`);
+                logger.error({ error, side: side === Side.BUY ? 'buy' : 'sell' }, `Error placing ${side === Side.BUY ? 'buy' : 'sell'} order`);
                 throw error;
             }
         });
@@ -173,7 +174,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                process.stdout.write(`Error placing market order: ${error}\n`);
+                logger.error({ error }, 'Error placing market order');
                 throw error;
             }
         });
@@ -198,7 +199,7 @@ export class ContractService {
                 );
                 return tx;
             } catch (error) {
-                process.stdout.write(`Error placing market order with deposit: ${error}\n`);
+                logger.error({ error }, 'Error placing market order with deposit');
                 throw error;
             }
         });
@@ -237,7 +238,7 @@ export class ContractService {
 
             return BigInt(price);
         } catch (error) {
-            process.stdout.write(`Error fetching price from Chainlink: ${error}\n`);
+            logger.error({ error }, 'Error fetching price from Chainlink');
             return 0n;
         }
     }
@@ -273,7 +274,7 @@ export class ContractService {
                 await txFunc();
             }
         } catch (error) {
-            process.stdout.write(`Error processing transaction queue: ${error}\n`);
+            logger.error({ error }, 'Error processing transaction queue');
         } finally {
             this.processingQueue = false;
 
@@ -294,7 +295,7 @@ export class ContractService {
             this.currentNonce = await this.publicClient.getTransactionCount({
                 address: this.account.address,
             });
-            process.stdout.write(`Initial nonce for ${this.account.address}: ${this.currentNonce}\n`);
+            logger.info({ address: this.account.address, nonce: this.currentNonce }, `Initial nonce for ${this.account.address}`);
         }
 
         let attempt = 0;
@@ -315,12 +316,12 @@ export class ContractService {
                                 address: this.account.address,
                             });
                             if (this.currentNonce !== null && networkNonce > this.currentNonce) {
-                                process.stdout.write(`Syncing nonce from ${this.currentNonce} to network nonce ${networkNonce}\n`);
+                                logger.info({ oldNonce: this.currentNonce, newNonce: networkNonce }, `Syncing nonce from ${this.currentNonce} to network nonce ${networkNonce}`);
                                 this.currentNonce = networkNonce;
                             }
                             this.pendingTransactions = 0;
                         } catch (e) {
-                            process.stdout.write(`Error updating nonce from network: ${e}\n`);
+                            logger.error({ error: e }, 'Error updating nonce from network');
                         }
                     }, 2000); // Wait a bit for transactions to propagate
                 }
@@ -336,34 +337,34 @@ export class ContractService {
                     errorMsg.includes("replacement transaction underpriced") ||
                     errorMsg.includes("already known")
                 ) {
-                    process.stdout.write(`Nonce issue detected (attempt ${attempt + 1}/${retries}): ${errorMsg}\n`);
+                    logger.warn({ error: errorMsg, attempt: attempt + 1, retries }, `Nonce issue detected (attempt ${attempt + 1}/${retries})`);
 
                     // Update nonce from the network
                     try {
                         const networkNonce = await this.publicClient.getTransactionCount({
                             address: this.account.address,
                         });
-                        process.stdout.write(`Current nonce: ${this.currentNonce}, Network nonce: ${networkNonce}\n`);
+                        logger.info({ currentNonce: this.currentNonce, networkNonce }, `Current nonce: ${this.currentNonce}, Network nonce: ${networkNonce}`);
                         this.currentNonce = networkNonce;
                     } catch (e) {
-                        process.stdout.write(`Error fetching network nonce: ${e}\n`);
+                        logger.error({ error: e }, 'Error fetching network nonce');
                     }
 
                     // Exponential backoff
                     const delay = Math.pow(2, attempt) * 1000;
-                    process.stdout.write(`Retrying in ${delay}ms...\n`);
+                    logger.info({ delay }, `Retrying in ${delay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     attempt++;
                 } else {
                     // If it's not a nonce issue, just throw the error
-                    process.stdout.write(`Transaction error (not nonce-related): ${error}\n`);
+                    logger.error({ error }, 'Transaction error (not nonce-related)');
                     throw error;
                 }
             }
         }
 
         // If we've exhausted all retries
-        process.stdout.write(`Failed after ${retries} attempts. Last error: ${lastError}\n`);
+        logger.error({ lastError, retries }, `Failed after ${retries} attempts`);
         throw lastError;
     }
 
@@ -383,7 +384,7 @@ export class ContractService {
             });
             return Number(decimals);
         } catch (error) {
-            process.stdout.write(`Error fetching decimals for token ${tokenAddress}: ${error}\n`);
+            logger.error({ error, tokenAddress }, `Error fetching decimals for token ${tokenAddress}`);
             return 18; // Default to 18 if there's an error
         }
     }
@@ -393,7 +394,7 @@ export class ContractService {
         this.baseDecimals = await this.getTokenDecimals(this.poolKey.baseCurrency);
         this.quoteDecimals = await this.getTokenDecimals(this.poolKey.quoteCurrency);
 
-        process.stdout.write(`Initialized token decimals - Base: ${this.baseDecimals}, Quote: ${this.quoteDecimals}\n`);
+        logger.info({ baseDecimals: this.baseDecimals, quoteDecimals: this.quoteDecimals }, 'Initialized token decimals');
     }
 
     // Get decimals based on side

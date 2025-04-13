@@ -1,4 +1,4 @@
-import { parseUnits, type Address, Chain } from 'viem';
+import { parseUnits, type Address, Chain, getAddress } from 'viem';
 import * as dotenv from 'dotenv';
 import { deployedContracts } from '../abis/deployedContracts';
 import { privateKeyToAccount } from "viem/accounts";
@@ -6,6 +6,7 @@ import { anvil } from 'viem/chains';
 import { rise, espresso, anvilDev } from './chain';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import logger from '../utils/logger';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const argv = yargs(hideBin(process.argv))
 const chainId = argv['chain-id'] ||
     (process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : 31337);
 
-console.log(`Using chain ID: ${chainId}`);
+logger.info(`Using chain ID: ${chainId}`);
 
 // Token configuration by chain ID
 const chainTokenConfig: Record<number, { baseToken: Address, quoteToken: Address }> = {
@@ -45,9 +46,9 @@ const chainTokenConfig: Record<number, { baseToken: Address, quoteToken: Address
     }
 };
 
-const poolManagerAddress = deployedContracts[chainId]?.PoolManager?.address;
-const gtxRouterAddress = deployedContracts[chainId]?.GTXRouter?.address;
-const balanceManagerAddress = deployedContracts[chainId]?.BalanceManager?.address;
+const poolManagerAddress = getAddress(deployedContracts[chainId]?.PoolManager?.address);
+const gtxRouterAddress = getAddress(deployedContracts[chainId]?.GTXRouter?.address);
+const balanceManagerAddress = getAddress(deployedContracts[chainId]?.BalanceManager?.address);
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
 export const gtxRouterAbi = deployedContracts[chainId]?.GTXRouter?.abi;
@@ -55,7 +56,7 @@ export const poolManagerAbi = deployedContracts[chainId]?.PoolManager?.abi;
 export const balanaceManagerAbi = deployedContracts[chainId]?.BalanceManager?.abi;
 
 export function getChainConfig(): Chain {
-    console.log(`Using chain configuration for chain ID: ${chainId}`);
+    logger.info(`Using chain configuration for chain ID: ${chainId}`);
     switch (chainId) {
         case 11155931:
             return rise;

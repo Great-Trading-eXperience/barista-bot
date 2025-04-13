@@ -3,6 +3,7 @@ import config from '../config/config';
 import { Side } from '../types';
 import { setup } from "../scripts/setup";
 import { ContractService } from './contractService';
+import logger from '../utils/logger';
 
 export class MarketMaker {
     private priceRefreshInterval: NodeJS.Timeout | null = null;
@@ -23,24 +24,24 @@ export class MarketMaker {
     }
 
     async initialize() {
-        process.stdout.write('Initializing market maker bot...\n');
-        process.stdout.write(`Using network with chainId: ${config.chainId}\n`);
+        logger.info('Initializing market maker bot...');
+        logger.info(`Using network with chainId: ${config.chainId}`);
 
         try {
             await this.contractService.verifyPool();
             await this.contractService.initializeTokenDecimals();
             await this.checkAndApproveTokens();
-            process.stdout.write('Market maker initialized successfully\n');
+            logger.info('Market maker initialized successfully');
             return true;
         } catch (error) {
-            process.stdout.write(`Failed to initialize market maker: ${error}\n`);
+            logger.error({ error }, 'Failed to initialize market maker');
             return false;
         }
     }
 
     private async checkAndApproveTokens() {
         try {
-            process.stdout.write('Checking token balances and approvals...\n');
+            logger.info('Checking token balances and approvals...');
 
             const setupResult = await setup();
 
@@ -48,16 +49,16 @@ export class MarketMaker {
                 throw new Error('Failed to set up token balances and approvals');
             }
 
-            process.stdout.write('Token balances and allowances verified\n');
+            logger.info('Token balances and allowances verified');
             return true;
         } catch (error) {
-            process.stdout.write(`Error checking and approving tokens: ${error}\n`);
+            logger.error({ error }, 'Error checking and approving tokens');
             throw error;
         }
     }
 
     async start() {
-        process.stdout.write('Starting market maker bot...\n');
+        logger.info('Starting market maker bot...');
 
         await this.cancelAllOrders();
         await this.updateMarketData();
@@ -67,21 +68,21 @@ export class MarketMaker {
                 if (!this.isProcessing) {
                     await this.performMarketMakingCycle();
                 } else {
-                    process.stdout.write('Previous market making cycle still running, skipping this interval\n');
+                    logger.info('Previous market making cycle still running, skipping this interval');
                 }
             } catch (error) {
-                process.stdout.write(`Error in market making cycle: ${error}\n`);
+                logger.error({ error }, 'Error in market making cycle');
                 this.isProcessing = false;
             }
         }, config.refreshInterval);
 
         await this.performMarketMakingCycle();
 
-        process.stdout.write('Market maker bot running...\n');
+        logger.info('Market maker bot running...');
     }
 
     async stop() {
-        process.stdout.write('Stopping market maker bot...\n');
+        logger.info('Stopping market maker bot...');
 
         if (this.priceRefreshInterval) {
             clearInterval(this.priceRefreshInterval);
@@ -90,14 +91,14 @@ export class MarketMaker {
 
         await this.cancelAllOrders();
 
-        process.stdout.write('Market maker bot stopped\n');
+        logger.info('Market maker bot stopped');
     }
 
     private async performMarketMakingCycle() {
         if (this.isProcessing) return;
 
         this.isProcessing = true;
-        process.stdout.write('Performing market making cycle...\n');
+        logger.debug('Performing market making cycle...');
 
         try {
             const previousMidPrice = this.lastMidPrice;
@@ -105,15 +106,15 @@ export class MarketMaker {
             await this.updateMarketData();
 
             if (previousMidPrice === 0n || this.isPriceDeviationSignificant(previousMidPrice, this.lastMidPrice)) {
-                process.stdout.write('Price deviation exceeds threshold, replacing orders\n');
+                logger.info('Price deviation exceeds threshold, replacing orders');
                 await this.cancelAndReplaceOrders();
             } else {
                 await this.fillMissingOrders();
             }
 
-            process.stdout.write('Market making cycle completed\n');
+            logger.debug('Market making cycle completed');
         } catch (error) {
-            process.stdout.write(`Error during market making cycle: ${error}\n`);
+            logger.error({ error }, 'Error during market making cycle');
         } finally {
             this.isProcessing = false; // Reset the flag when done, regardless of success or failure
         }
@@ -126,7 +127,7 @@ export class MarketMaker {
             if (this.config.useBinancePrice) {
                 price = await this.fetchBinancePrice();
                 if (price > 0n) {
-                    process.stdout.write(`Using Binance price: ${formatUnits(price, 8)} USD\n`);
+                    logger.info(`Using Binance price: ${formatUnits(price, 8)} USD`);
                 }
             }
 
@@ -134,7 +135,7 @@ export class MarketMaker {
             if (price === 0n) {
                 price = await this.contractService.fetchChainlinkPrice();
                 if (price > 0n) {
-                    process.stdout.write(`Using Chainlink price: ${formatUnits(price, 8)} USD\n`);
+                    logger.info(`Using Chainlink price: ${formatUnits(price, 8)} USD`);
                 }
             }
 
@@ -144,7 +145,7 @@ export class MarketMaker {
 
             await this.updateActiveOrders();
         } catch (error) {
-            process.stdout.write(`Error updating market data: ${error}\n`);
+            logger.error({ error }, 'Error updating market data');
         }
     }
 
@@ -168,7 +169,7 @@ export class MarketMaker {
             const priceIn6Decimals = Math.round(price * 100) * 10000; // Round to nearest 0.01
             return BigInt(priceIn6Decimals) * 100n; // Convert from 6 decimals to 8 decimals
         } catch (error) {
-            process.stdout.write(`Error fetching price from Binance: ${error}\n`);
+            logger.error({ error }, 'Error fetching price from Binance');
             return 0n;
         }
     }
@@ -185,9 +186,9 @@ export class MarketMaker {
                 this.activeOrderIds[side].push(order.id);
             }
 
-            process.stdout.write(`Active orders - Buy: ${this.activeOrderIds[Side.BUY].length}, Sell: ${this.activeOrderIds[Side.SELL].length}\n`);
+            logger.debug(`Active orders - Buy: ${this.activeOrderIds[Side.BUY].length}, Sell: ${this.activeOrderIds[Side.SELL].length}`);
         } catch (error) {
-            process.stdout.write(`Error updating active orders: ${error}\n`);
+            logger.error({ error }, 'Error updating active orders');
         }
     }
 
@@ -202,7 +203,7 @@ export class MarketMaker {
         const deviationBps = (priceDifference * 10000n) / oldPrice;
         const thresholdBps = BigInt(this.config.priceDeviationThresholdBps);
 
-        process.stdout.write(`Price deviation: ${Number(deviationBps) / 100}% (threshold: ${Number(thresholdBps) / 100}%)\n`);
+        logger.debug(`Price deviation: ${Number(deviationBps) / 100}% (threshold: ${Number(thresholdBps) / 100}%)`);
 
         return deviationBps > thresholdBps;
     }
@@ -221,14 +222,14 @@ export class MarketMaker {
             const buyOrders = userActiveOrders.filter(order => order.side === Side.BUY);
             const sellOrders = userActiveOrders.filter(order => order.side === Side.SELL);
 
-            process.stdout.write(`Current orders - Buy: ${buyOrders.length}, Sell: ${sellOrders.length}\n`);
+            logger.debug(`Current orders - Buy: ${buyOrders.length}, Sell: ${sellOrders.length}`);
 
             // Calculate how many orders to add on each side
             const buyOrdersToAdd = Math.max(0, this.config.maxOrdersPerSide - buyOrders.length);
             const sellOrdersToAdd = Math.max(0, this.config.maxOrdersPerSide - sellOrders.length);
 
             if (buyOrdersToAdd > 0 || sellOrdersToAdd > 0) {
-                process.stdout.write(`Adding missing orders - Buy: ${buyOrdersToAdd}, Sell: ${sellOrdersToAdd}\n`);
+                logger.info(`Adding missing orders - Buy: ${buyOrdersToAdd}, Sell: ${sellOrdersToAdd}`);
 
                 const spreadBasisPoints = BigInt(Math.round(this.config.spreadPercentage * 100));
                 const priceStepBasisPoints = BigInt(Math.round(this.config.priceStepPercentage * 100));
@@ -261,15 +262,15 @@ export class MarketMaker {
                     await this.placeOrder(Side.SELL, formattedSellPrice, this.config.orderSize);
                 }
             } else {
-                process.stdout.write('No new orders needed - order book already balanced\n');
+                logger.debug('No new orders needed - order book already balanced');
             }
         } catch (error) {
-            process.stdout.write(`Error filling missing orders: ${error}\n`);
+            logger.error({ error }, 'Error filling missing orders');
         }
     }
 
     private async cancelAllOrders() {
-        process.stdout.write('Cancelling all active orders...\n');
+        logger.info('Cancelling all active orders...');
 
         try {
             const orders = await this.contractService.getUserActiveOrders();
@@ -277,28 +278,28 @@ export class MarketMaker {
             await Promise.all(orders.map(async (order) => {
                 const sideText = order.side === Side.BUY ? 'buy' : 'sell';
                 try {
-                    process.stdout.write(`Cancelling ${sideText} order ${order.id}\n`);
+                    logger.debug(`Cancelling ${sideText} order ${order.id}`);
                     await this.contractService.cancelOrder(order.id);
                 } catch (error) {
-                    process.stdout.write(`Error cancelling order ${order.id}: ${error}\n`);
+                    logger.error({ error, orderId: order.id }, `Error cancelling order ${order.id}`);
                 }
             }));
 
             this.activeOrderIds = { [Side.BUY]: [], [Side.SELL]: [] };
-            process.stdout.write('All orders cancelled\n');
+            logger.info('All orders cancelled');
         } catch (error) {
-            process.stdout.write(`Error cancelling orders: ${error}\n`);
+            logger.error({ error }, 'Error cancelling orders');
         }
     }
 
     // Modify the placeMakerOrders method
     private async placeMakerOrders() {
         if (this.lastMidPrice === 0n) {
-            process.stdout.write('Cannot place orders: No mid price available\n');
+            logger.warn('Cannot place orders: No mid price available');
             return;
         }
 
-        process.stdout.write('Placing maker orders...\n');
+        logger.info('Placing maker orders...');
 
         const spreadBasisPoints = BigInt(Math.round(this.config.spreadPercentage * 100));
         const priceStepBasisPoints = BigInt(Math.round(this.config.priceStepPercentage * 100));
@@ -325,7 +326,7 @@ export class MarketMaker {
             await this.placeOrder(Side.SELL, formattedSellPrice, config.orderSize);
         }
 
-        process.stdout.write('Maker orders placed\n');
+        logger.info('Maker orders placed');
     }
 
     private async placeOrder(side: Side, price: bigint, quantity: bigint) {
@@ -333,15 +334,15 @@ export class MarketMaker {
             const decimals = this.contractService.getDecimalsForSide(side);
 
             if (side === Side.BUY) {
-                process.stdout.write(`Placing buy order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} quote tokens\n`);
+                logger.debug(`Placing buy order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} quote tokens`);
             } else {
-                process.stdout.write(`Placing sell order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} base tokens\n`);
+                logger.debug(`Placing sell order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} base tokens`);
             }
 
             const tx = await this.contractService.placeOrder(side, price, quantity);
-            process.stdout.write(`Order placed, transaction: ${tx}\n`);
+            logger.debug(`Order placed, transaction: ${tx}`);
         } catch (error) {
-            process.stdout.write(`Error placing ${side === Side.BUY ? 'buy' : 'sell'} order: ${error}\n`);
+            logger.error({ error, side: side === Side.BUY ? 'buy' : 'sell' }, `Error placing ${side === Side.BUY ? 'buy' : 'sell'} order`);
         }
     }
 }

@@ -2,6 +2,7 @@ import { createPublicClient, createWalletClient, http, parseEther, parseUnits, f
 import { anvil } from 'viem/chains';
 import config, { getChainConfig } from '../config/config';
 import { erc20Abi } from '../abis/erc20Abi';
+import logger from '../utils/logger';
 
 const mockTokenAbi = [
     ...erc20Abi,
@@ -21,7 +22,7 @@ const chain = getChainConfig();
 
 export async function setup(account?: Account) {
     const accountToUse = account || config.account;
-    process.stdout.write(`Setting up tokens and approvals for account ${accountToUse.address}...\n`);
+    logger.info(`Setting up tokens and approvals for account ${accountToUse.address}`);
 
     const publicClient = createPublicClient({
         chain: chain,
@@ -43,9 +44,9 @@ export async function setup(account?: Account) {
         const baseTokenBalance = await getTokenBalance(baseToken, accountToUse.address);
         const quoteTokenBalance = await getTokenBalance(quoteToken, accountToUse.address);
 
-        process.stdout.write(`Current balances for ${accountToUse.address}:\n`);
-        process.stdout.write(`- Base token (ETH): ${formatUnits(baseTokenBalance, 18)} ETH\n`);
-        process.stdout.write(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC\n`);
+        logger.info(`Current balances for ${accountToUse.address}:`);
+        logger.info(`- Base token (ETH): ${formatUnits(baseTokenBalance, 18)} ETH`);
+        logger.info(`- Quote token (USDC): ${formatUnits(quoteTokenBalance, 6)} USDC`);
 
         // Define minimum required balances
         const minBaseBalance = parseEther('100000000000');
@@ -53,7 +54,7 @@ export async function setup(account?: Account) {
 
         // Mint tokens if balance is insufficient
         if (baseTokenBalance < minBaseBalance) {
-            process.stdout.write(`Minting ETH to ${accountToUse.address}...\n`);
+            logger.info(`Minting ETH to ${accountToUse.address}...`);
             const mintBaseAmount = parseEther('100000000000');
 
             await walletClient.writeContract({
@@ -63,11 +64,11 @@ export async function setup(account?: Account) {
                 args: [accountToUse.address, mintBaseAmount],
             });
         } else {
-            process.stdout.write(`Base token balance is sufficient.\n`);
+            logger.info(`Base token balance is sufficient.`);
         }
 
         if (quoteTokenBalance < minQuoteBalance) {
-            process.stdout.write(`Minting USDC to ${accountToUse.address}...\n`);
+            logger.info(`Minting USDC to ${accountToUse.address}...`);
             const mintQuoteAmount = parseUnits('100000000000', 6);
 
             await walletClient.writeContract({
@@ -77,7 +78,7 @@ export async function setup(account?: Account) {
                 args: [accountToUse.address, mintQuoteAmount],
             });
         } else {
-            process.stdout.write(`Quote token balance is sufficient.\n`);
+            logger.info(`Quote token balance is sufficient.`);
         }
 
         // Check current allowances
@@ -89,7 +90,7 @@ export async function setup(account?: Account) {
 
         // Approve tokens if allowance is insufficient
         if (baseAllowance < minAllowance) {
-            process.stdout.write(`Approving ETH for balance manager...\n`);
+            logger.info(`Approving ETH for balance manager...`);
             await walletClient.writeContract({
                 address: baseToken,
                 abi: erc20Abi,
@@ -97,11 +98,11 @@ export async function setup(account?: Account) {
                 args: [balanceManagerAddress, maxUint256],
             });
         } else {
-            process.stdout.write(`Base token allowance is sufficient.\n`);
+            logger.info(`Base token allowance is sufficient.`);
         }
 
         if (quoteAllowance < minAllowance) {
-            process.stdout.write(`Approving USDC for balance manager...\n`);
+            logger.info(`Approving USDC for balance manager...`);
             await walletClient.writeContract({
                 address: quoteToken,
                 abi: erc20Abi,
@@ -109,13 +110,13 @@ export async function setup(account?: Account) {
                 args: [balanceManagerAddress, maxUint256],
             });
         } else {
-            process.stdout.write(`Quote token allowance is sufficient.\n`);
+            logger.info(`Quote token allowance is sufficient.`);
         }
 
-        process.stdout.write(`Setup completed successfully for ${accountToUse.address}\n`);
+        logger.info(`Setup completed successfully for ${accountToUse.address}`);
         return true;
     } catch (error) {
-        process.stdout.write(`Error during setup: ${error}\n`);
+        logger.error({ error }, `Error during setup`);
         return false;
     }
 
@@ -143,7 +144,7 @@ if (require.main === module) {
     setup()
         .then(() => process.exit(0))
         .catch((error) => {
-            process.stdout.write(`Unhandled error in setup: ${error}\n`);
+            logger.error({ error }, `Unhandled error in setup`);
             process.exit(1);
         });
 }

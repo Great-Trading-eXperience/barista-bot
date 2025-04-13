@@ -2,6 +2,7 @@ import { type Address, formatEther, formatUnits } from 'viem';
 import config from '../config/config';
 import { IntervalType, Side } from '../types';
 import { ContractService } from './contractService';
+import logger from '../utils/logger';
 
 export class TradingBot {
     private tradingInterval: NodeJS.Timeout | null = null;
@@ -36,38 +37,47 @@ export class TradingBot {
     randomizeStrategy() {
         const strategies = ['random', 'momentum', 'mean-reversion'];
         const randomIndex = Math.floor(Math.random() * strategies.length);
-        process.stdout.write(`Using strategy: ${strategies[randomIndex]}\n`);
+        logger.info(`Using strategy: ${strategies[randomIndex]}`);
         return strategies[randomIndex] as 'random' | 'momentum' | 'mean-reversion';
     }
 
     async initialize() {
-        process.stdout.write('Initializing trading bot...\n');
+        logger.info('Initializing trading bot...');
         await this.contractService.initializeTokenDecimals();
 
         return true;
     }
 
     async start() {
-        process.stdout.write('Starting trading bot...\n');
+        logger.info('Starting trading bot...');
+        let isExecuting = false;
 
         this.tradingInterval = setInterval(async () => {
+            if (isExecuting) {
+                logger.debug('Previous trade execution still in progress, skipping');
+                return;
+            }
+
             try {
+                isExecuting = true;
                 await this.executeTrade();
             } catch (error) {
-                process.stdout.write(`Error executing trade: ${error}\n`);
+                logger.error({ error }, 'Error executing trade');
+            } finally {
+                isExecuting = false;
             }
         }, this.getRandomInterval());
     }
 
     async stop() {
-        process.stdout.write('Stopping trading bot...\n');
+        logger.info('Stopping trading bot...');
 
         if (this.tradingInterval) {
             clearInterval(this.tradingInterval);
             this.tradingInterval = null;
         }
 
-        process.stdout.write('Trading bot stopped\n');
+        logger.info('Trading bot stopped');
     }
 
     private getRandomInterval(): number {
@@ -106,16 +116,16 @@ export class TradingBot {
             const quantity = BigInt(Math.floor(Number(config.orderSize) * selectedMultiplier));
 
             if (side === Side.BUY) {
-                process.stdout.write(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)\n`);
+                logger.info(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)`);
                 await this.contractService.placeMarketOrderWithDeposit(side, quantity);
             } else {
-                process.stdout.write(`Executing sell order with ${formatEther(quantity)} base tokens (${selectedMultiplier * 100}% size)\n`);
+                logger.info(`Executing sell order with ${formatEther(quantity)} base tokens (${selectedMultiplier * 100}% size)`);
                 await this.contractService.placeMarketOrderWithDeposit(side, quantity);
             }
 
-            process.stdout.write('Trade executed successfully with deposit\n');
+            logger.info('Trade executed successfully with deposit');
         } catch (error) {
-            process.stdout.write(`Error executing trade: ${error}\n`);
+            logger.error({ error }, 'Error executing trade');
         }
     }
 
@@ -133,7 +143,7 @@ export class TradingBot {
             }
             return null;
         } catch (error) {
-            process.stdout.write(`Error getting current price: ${error}\n`);
+            logger.error({ error }, 'Error getting current price');
             return null;
         }
     }

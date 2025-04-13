@@ -3,6 +3,7 @@ import { TradingBot } from './tradingBot';
 import { setup } from '../scripts/setup';
 import { privateKeyToAccount } from 'viem/accounts';
 import * as dotenv from "dotenv";
+import logger from '../utils/logger';
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ export class BotManager {
     private tradingBots: TradingBot[] = [];
 
     async startMarketMaker(): Promise<void> {
-        process.stdout.write('Starting Market Maker\n');
+        logger.info('Starting Market Maker');
 
         try {
             this.marketMaker = new MarketMaker();
@@ -23,18 +24,18 @@ export class BotManager {
 
             await this.marketMaker.start();
 
-            process.stdout.write('Market maker started and providing liquidity\n');
+            logger.info('Market maker started and providing liquidity');
             this.setupShutdownHandlers();
 
             return Promise.resolve();
         } catch (error) {
-            process.stdout.write(`Error starting market maker: ${error}\n`);
+            logger.error({ error }, 'Error starting market maker');
             throw error;
         }
     }
 
     async startTradingBots(): Promise<void> {
-        process.stdout.write('Starting Trading Bots\n');
+        logger.info('Starting Trading Bots');
 
         try {
             const botAccounts = [];
@@ -52,13 +53,13 @@ export class BotManager {
             }
 
             if (botAccounts.length === 0) {
-                process.stdout.write('No trading bot private keys found in .env file\n');
+                logger.info('No trading bot private keys found in .env file');
                 return Promise.resolve();
             }
 
             // Setup and start each trading bot
             for (const account of botAccounts) {
-                process.stdout.write(`Setting up trading bot for account ${account.address}\n`);
+                logger.info(`Setting up trading bot for account ${account.address}`);
 
                 // Run setup for this account
                 await setup(account);
@@ -69,18 +70,18 @@ export class BotManager {
                 await tradingBot.start();
 
                 this.tradingBots.push(tradingBot);
-                process.stdout.write(`Trading bot started for account ${account.address}\n`);
+                logger.info(`Trading bot started for account ${account.address}`);
 
                 // Small delay between starting bots
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            process.stdout.write(`${this.tradingBots.length} trading bots running\n`);
+            logger.info(`${this.tradingBots.length} trading bots running`);
             this.setupShutdownHandlers();
 
             return Promise.resolve();
         } catch (error) {
-            process.stdout.write(`Error starting trading bots: ${error}\n`);
+            logger.error({ error }, 'Error starting trading bots');
             throw error;
         }
     }
@@ -88,13 +89,13 @@ export class BotManager {
     private setupShutdownHandlers(): void {
         // Handle graceful shutdown
         process.on('SIGINT', async () => {
-            process.stdout.write('Received SIGINT, shutting down...\n');
+            logger.warn('Received SIGINT, shutting down...');
             await this.shutdown();
             process.exit(0);
         });
 
         process.on('SIGTERM', async () => {
-            process.stdout.write('Received SIGTERM, shutting down...\n');
+            logger.warn('Received SIGTERM, shutting down...');
             await this.shutdown();
             process.exit(0);
         });
@@ -103,13 +104,13 @@ export class BotManager {
     private async shutdown(): Promise<void> {
         // Stop all trading bots
         for (const bot of this.tradingBots) {
-            process.stdout.write(`Stopping bot for account ${bot.getAccountAddress()}\n`);
+            logger.info(`Stopping bot for account ${bot.getAccountAddress()}`);
             await bot.stop();
         }
 
         // Stop market maker if it's running
         if (this.marketMaker) {
-            process.stdout.write('Stopping market maker\n');
+            logger.info('Stopping market maker');
             await this.marketMaker.stop();
         }
     }

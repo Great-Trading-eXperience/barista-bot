@@ -1,8 +1,9 @@
 // barista-bot/src/index.ts
 import { BotManager } from './services/botManager';
+import logger from './utils/logger';
 
 async function main() {
-    process.stdout.write('Starting Barista Bot System\n');
+    logger.info('Starting Barista Bot System');
 
     const botManager = new BotManager();
 
@@ -24,7 +25,7 @@ async function main() {
                 await botManager.startMarketMaker();
 
                 // Wait for market maker to establish some orders
-                process.stdout.write('Waiting for market maker to establish orders...\n');
+                logger.info('Waiting for market maker to establish orders...');
                 await new Promise(resolve => setTimeout(resolve, 10000));
 
                 // Then start trading bots
@@ -32,9 +33,9 @@ async function main() {
                 break;
         }
 
-        process.stdout.write(`Barista Bot System running in ${mode} mode\n`);
+        logger.info(`Barista Bot System running in ${mode} mode`);
     } catch (error) {
-        process.stdout.write(`Unhandled error: ${error}\n`);
+        logger.error({ error }, `Unhandled error`);
         process.exit(1);
     }
 }
