@@ -58,7 +58,7 @@ export const anvilDev = defineChain({
     },
     rpcUrls: {
         default: {
-            http: ['https://gtx-anvil.bobbyfiando.com'],
+            http: ['https://anvil.gtxdex.xyz'],
         },
     },
 })

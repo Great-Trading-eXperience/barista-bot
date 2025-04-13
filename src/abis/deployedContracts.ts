@@ -18,7 +18,7 @@ interface DeployedContracts {
 export const deployedContracts: DeployedContracts = {
   31337: {
     BalanceManager: {
-      address: "0x1cec75b3cd7ac8358f17d8260f28e7eaffc18b34",
+      address: "0x0c626fc4a447b01554518550e30600136864640b",
       abi: [
         {
           type: "constructor",
@@ -697,7 +697,7 @@ export const deployedContracts: DeployedContracts = {
       },
     },
     PoolManager: {
-      address: "0xd36cbacc41e065dd3608d12c734c1ccb6ebe14f9",
+      address: "0xa21ddc1f17df41589bc6a5209292aed2df61cc94",
       abi: [
         {
           type: "constructor",
@@ -1343,1984 +1343,7 @@ export const deployedContracts: DeployedContracts = {
       },
     },
     GTXRouter: {
-      address: "0x8a48e3ca9d24940ec313e3d89d9532ba5de0b069",
-      abi: [
-        {
-          type: "constructor",
-          inputs: [
-            {
-              name: "_poolManager",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_balanceManager",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "balanceManager",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "contract IBalanceManager",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "cancelOrder",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "orderId",
-              type: "uint48",
-              internalType: "OrderId",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "getBestPrice",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "tuple",
-              internalType: "struct IOrderBook.PriceVolume",
-              components: [
-                {
-                  name: "price",
-                  type: "uint256",
-                  internalType: "Price",
-                },
-                {
-                  name: "volume",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-              ],
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getNextBestPrices",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "price",
-              type: "uint256",
-              internalType: "Price",
-            },
-            {
-              name: "count",
-              type: "uint8",
-              internalType: "uint8",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "tuple[]",
-              internalType: "struct IOrderBook.PriceVolume[]",
-              components: [
-                {
-                  name: "price",
-                  type: "uint256",
-                  internalType: "Price",
-                },
-                {
-                  name: "volume",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-              ],
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getOrderQueue",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "price",
-              type: "uint256",
-              internalType: "Price",
-            },
-          ],
-          outputs: [
-            {
-              name: "orderCount",
-              type: "uint48",
-              internalType: "uint48",
-            },
-            {
-              name: "totalVolume",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getUserActiveOrders",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "tuple[]",
-              internalType: "struct IOrderBook.Order[]",
-              components: [
-                {
-                  name: "user",
-                  type: "address",
-                  internalType: "address",
-                },
-                {
-                  name: "id",
-                  type: "uint48",
-                  internalType: "OrderId",
-                },
-                {
-                  name: "next",
-                  type: "uint48",
-                  internalType: "OrderId",
-                },
-                {
-                  name: "prev",
-                  type: "uint48",
-                  internalType: "OrderId",
-                },
-                {
-                  name: "timestamp",
-                  type: "uint48",
-                  internalType: "uint48",
-                },
-                {
-                  name: "expiry",
-                  type: "uint48",
-                  internalType: "uint48",
-                },
-                {
-                  name: "quantity",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "filled",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "price",
-                  type: "uint256",
-                  internalType: "Price",
-                },
-                {
-                  name: "status",
-                  type: "uint8",
-                  internalType: "enum Status",
-                },
-                {
-                  name: "orderType",
-                  type: "uint8",
-                  internalType: "enum OrderType",
-                },
-                {
-                  name: "side",
-                  type: "uint8",
-                  internalType: "enum Side",
-                },
-              ],
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "placeMarketOrder",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "quantity",
-              type: "uint128",
-              internalType: "Quantity",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "orderId",
-              type: "uint48",
-              internalType: "OrderId",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "placeMarketOrderWithDeposit",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "quantity",
-              type: "uint128",
-              internalType: "Quantity",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "orderId",
-              type: "uint48",
-              internalType: "OrderId",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "placeOrder",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "price",
-              type: "uint256",
-              internalType: "Price",
-            },
-            {
-              name: "quantity",
-              type: "uint128",
-              internalType: "Quantity",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "orderId",
-              type: "uint48",
-              internalType: "OrderId",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "placeOrderWithDeposit",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "price",
-              type: "uint256",
-              internalType: "Price",
-            },
-            {
-              name: "quantity",
-              type: "uint128",
-              internalType: "Quantity",
-            },
-            {
-              name: "side",
-              type: "uint8",
-              internalType: "enum Side",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "orderId",
-              type: "uint48",
-              internalType: "OrderId",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "poolManager",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "contract IPoolManager",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "swap",
-          inputs: [
-            {
-              name: "srcCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "dstCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "srcAmount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "minDstAmount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "maxHops",
-              type: "uint8",
-              internalType: "uint8",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "receivedAmount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "error",
-          name: "FillOrKillNotFulfilled",
-          inputs: [
-            {
-              name: "filledAmount",
-              type: "uint128",
-              internalType: "uint128",
-            },
-            {
-              name: "requestedAmount",
-              type: "uint128",
-              internalType: "uint128",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "InvalidOrderType",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "InvalidPrice",
-          inputs: [
-            {
-              name: "price",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "InvalidPriceIncrement",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "InvalidQuantity",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "InvalidQuantityIncrement",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "OrderHasNoLiquidity",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "OrderNotFound",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "OrderTooLarge",
-          inputs: [
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "maxAmount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "OrderTooSmall",
-          inputs: [
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "minAmount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "PostOnlyWouldTake",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "SlippageExceeded",
-          inputs: [
-            {
-              name: "requestedPrice",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "limitPrice",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "SlippageTooHigh",
-          inputs: [
-            {
-              name: "received",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "minReceived",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "TradingPaused",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "UnauthorizedCancellation",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "UnauthorizedRouter",
-          inputs: [
-            {
-              name: "router",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-      ],
-      inheritedFunctions: {},
-    },
-  },
-  31338: {
-    BalanceManager: {
-      address: "0x27e7812b2ea6c02967a6a047281395d614e078fd",
-      abi: [
-        {
-          type: "constructor",
-          inputs: [
-            {
-              name: "_owner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_feeReceiver",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_feeMaker",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "_feeTaker",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "balanceOf",
-          inputs: [
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "balance",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "deposit",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "feeMaker",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "feeTaker",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getBalance",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getLockedBalance",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "lock",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "lockedBalanceOf",
-          inputs: [
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "owner",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "renounceOwnership",
-          inputs: [],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setAuthorizedOperator",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "approved",
-              type: "bool",
-              internalType: "bool",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setFees",
-          inputs: [
-            {
-              name: "_feeMaker",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "_feeTaker",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferFrom",
-          inputs: [
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "receiver",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferLockedFrom",
-          inputs: [
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "receiver",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferOut",
-          inputs: [
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "receiver",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferOwnership",
-          inputs: [
-            {
-              name: "newOwner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "unlock",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "withdraw",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "withdraw",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "event",
-          name: "Deposit",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              indexed: true,
-              internalType: "uint256",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "OperatorSet",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "approved",
-              type: "bool",
-              indexed: false,
-              internalType: "bool",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "OwnershipTransferred",
-          inputs: [
-            {
-              name: "previousOwner",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "newOwner",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "TransferFrom",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "sender",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "receiver",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-            {
-              name: "feeAmount",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "Withdrawal",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              indexed: true,
-              internalType: "uint256",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "error",
-          name: "ERC20TransferFailed",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "InsufficientBalance",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "id",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "want",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "have",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "NativeTransferFailed",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "OwnableInvalidOwner",
-          inputs: [
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "OwnableUnauthorizedAccount",
-          inputs: [
-            {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ReentrancyGuardReentrantCall",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "TransferError",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "UnauthorizedOperator",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ZeroAmount",
-          inputs: [],
-        },
-      ],
-      inheritedFunctions: {
-        deposit: "src/interfaces/IBalanceManager.sol",
-        getBalance: "src/interfaces/IBalanceManager.sol",
-        lock: "src/interfaces/IBalanceManager.sol",
-        setAuthorizedOperator: "src/interfaces/IBalanceManager.sol",
-        setFees: "src/interfaces/IBalanceManager.sol",
-        transferFrom: "src/interfaces/IBalanceManager.sol",
-        transferLockedFrom: "src/interfaces/IBalanceManager.sol",
-        transferOut: "src/interfaces/IBalanceManager.sol",
-        unlock: "src/interfaces/IBalanceManager.sol",
-        withdraw: "src/interfaces/IBalanceManager.sol",
-        owner: "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-        renounceOwnership:
-          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-        transferOwnership:
-          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-      },
-    },
-    PoolManager: {
-      address: "0x403d760f1b378245a2090aebb1125a6faa4f5668",
-      abi: [
-        {
-          type: "constructor",
-          inputs: [
-            {
-              name: "_owner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_balanceManager",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "addCommonIntermediary",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "allCurrencies",
-          inputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "commonIntermediaries",
-          inputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "createPool",
-          inputs: [
-            {
-              name: "_baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "_tradingRules",
-              type: "tuple",
-              internalType: "struct IOrderBook.TradingRules",
-              components: [
-                {
-                  name: "minTradeAmount",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "minAmountMovement",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "minPriceMovement",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "minOrderSize",
-                  type: "uint128",
-                  internalType: "Quantity",
-                },
-                {
-                  name: "slippageTreshold",
-                  type: "uint8",
-                  internalType: "uint8",
-                },
-              ],
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bytes32",
-              internalType: "PoolId",
-            },
-          ],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "createPoolKey",
-          inputs: [
-            {
-              name: "currency1",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "currency2",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "tuple",
-              internalType: "struct PoolKey",
-              components: [
-                {
-                  name: "baseCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "quoteCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-              ],
-            },
-          ],
-          stateMutability: "pure",
-        },
-        {
-          type: "function",
-          name: "getAllCurrencies",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address[]",
-              internalType: "Currency[]",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getCommonIntermediaries",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address[]",
-              internalType: "Currency[]",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getPool",
-          inputs: [
-            {
-              name: "key",
-              type: "tuple",
-              internalType: "struct PoolKey",
-              components: [
-                {
-                  name: "baseCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "quoteCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-              ],
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "tuple",
-              internalType: "struct IPoolManager.Pool",
-              components: [
-                {
-                  name: "baseCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "quoteCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "orderBook",
-                  type: "address",
-                  internalType: "contract IOrderBook",
-                },
-              ],
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getPoolId",
-          inputs: [
-            {
-              name: "key",
-              type: "tuple",
-              internalType: "struct PoolKey",
-              components: [
-                {
-                  name: "baseCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "quoteCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-              ],
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bytes32",
-              internalType: "PoolId",
-            },
-          ],
-          stateMutability: "pure",
-        },
-        {
-          type: "function",
-          name: "getPoolLiquidityScore",
-          inputs: [
-            {
-              name: "currency1",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "currency2",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "isCommonIntermediary",
-          inputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bool",
-              internalType: "bool",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "owner",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "poolExists",
-          inputs: [
-            {
-              name: "currency1",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "currency2",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bool",
-              internalType: "bool",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "poolLiquidity",
-          inputs: [
-            {
-              name: "",
-              type: "bytes32",
-              internalType: "PoolId",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "pools",
-          inputs: [
-            {
-              name: "",
-              type: "bytes32",
-              internalType: "PoolId",
-            },
-          ],
-          outputs: [
-            {
-              name: "baseCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "quoteCurrency",
-              type: "address",
-              internalType: "Currency",
-            },
-            {
-              name: "orderBook",
-              type: "address",
-              internalType: "contract IOrderBook",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "registeredCurrencies",
-          inputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bool",
-              internalType: "bool",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "removeCommonIntermediary",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              internalType: "Currency",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "renounceOwnership",
-          inputs: [],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setRouter",
-          inputs: [
-            {
-              name: "_router",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferOwnership",
-          inputs: [
-            {
-              name: "newOwner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "updatePoolLiquidity",
-          inputs: [
-            {
-              name: "key",
-              type: "tuple",
-              internalType: "struct PoolKey",
-              components: [
-                {
-                  name: "baseCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-                {
-                  name: "quoteCurrency",
-                  type: "address",
-                  internalType: "Currency",
-                },
-              ],
-            },
-            {
-              name: "liquidityScore",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "event",
-          name: "CurrencyAdded",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              indexed: false,
-              internalType: "Currency",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "IntermediaryAdded",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              indexed: false,
-              internalType: "Currency",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "IntermediaryRemoved",
-          inputs: [
-            {
-              name: "currency",
-              type: "address",
-              indexed: false,
-              internalType: "Currency",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "OwnershipTransferred",
-          inputs: [
-            {
-              name: "previousOwner",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-            {
-              name: "newOwner",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "PoolCreated",
-          inputs: [
-            {
-              name: "poolId",
-              type: "bytes32",
-              indexed: true,
-              internalType: "PoolId",
-            },
-            {
-              name: "orderBook",
-              type: "address",
-              indexed: false,
-              internalType: "address",
-            },
-            {
-              name: "baseCurrency",
-              type: "address",
-              indexed: false,
-              internalType: "Currency",
-            },
-            {
-              name: "quoteCurrency",
-              type: "address",
-              indexed: false,
-              internalType: "Currency",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "PoolLiquidityUpdated",
-          inputs: [
-            {
-              name: "poolId",
-              type: "bytes32",
-              indexed: false,
-              internalType: "PoolId",
-            },
-            {
-              name: "newLiquidity",
-              type: "uint256",
-              indexed: false,
-              internalType: "uint256",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "error",
-          name: "InvalidRouter",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "OwnableInvalidOwner",
-          inputs: [
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "OwnableUnauthorizedAccount",
-          inputs: [
-            {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-      ],
-      inheritedFunctions: {
-        owner: "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-        renounceOwnership:
-          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-        transferOwnership:
-          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
-        addCommonIntermediary: "src/interfaces/IPoolManager.sol",
-        createPool: "src/interfaces/IPoolManager.sol",
-        createPoolKey: "src/interfaces/IPoolManager.sol",
-        getAllCurrencies: "src/interfaces/IPoolManager.sol",
-        getCommonIntermediaries: "src/interfaces/IPoolManager.sol",
-        getPool: "src/interfaces/IPoolManager.sol",
-        getPoolId: "src/interfaces/IPoolManager.sol",
-        getPoolLiquidityScore: "src/interfaces/IPoolManager.sol",
-        poolExists: "src/interfaces/IPoolManager.sol",
-        removeCommonIntermediary: "src/interfaces/IPoolManager.sol",
-        setRouter: "src/interfaces/IPoolManager.sol",
-        updatePoolLiquidity: "src/interfaces/IPoolManager.sol",
-      },
-    },
-    GTXRouter: {
-      address: "0x57bdd3ec730ea23bc7b510a23270ab43a5ec578c",
+      address: "0x2a590c461db46bca129e8dbe5c3998a8ff402e76",
       abi: [
         {
           type: "constructor",
@@ -3970,7 +1993,7 @@ export const deployedContracts: DeployedContracts = {
       inheritedFunctions: {},
     },
     MockToken: {
-      address: "0xceb2ca5f6e93e66927a64dcd84ab1e8176c802ef",
+      address: "0xc32609c91d6b6b51d48f2611308fef121b02041f",
       abi: [
         {
           type: "constructor",
@@ -4333,6 +2356,1983 @@ export const deployedContracts: DeployedContracts = {
         transferFrom:
           "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol",
       },
+    },
+  },
+  31338: {
+    BalanceManager: {
+      address: "0x00cac06dd0bb4103f8b62d280fe9bcee8f26fd59",
+      abi: [
+        {
+          type: "constructor",
+          inputs: [
+            {
+              name: "_owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "_feeReceiver",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "_feeMaker",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "_feeTaker",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "balanceOf",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "balance",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "deposit",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "feeMaker",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "feeTaker",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getBalance",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getLockedBalance",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "lock",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "lockedBalanceOf",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "owner",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "renounceOwnership",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setAuthorizedOperator",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "approved",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setFees",
+          inputs: [
+            {
+              name: "_feeMaker",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "_feeTaker",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferFrom",
+          inputs: [
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "receiver",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferLockedFrom",
+          inputs: [
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "receiver",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferOut",
+          inputs: [
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "receiver",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferOwnership",
+          inputs: [
+            {
+              name: "newOwner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "unlock",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "withdraw",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "withdraw",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "event",
+          name: "Deposit",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "OperatorSet",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "approved",
+              type: "bool",
+              indexed: false,
+              internalType: "bool",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "OwnershipTransferred",
+          inputs: [
+            {
+              name: "previousOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "newOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "TransferFrom",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "sender",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "receiver",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "feeAmount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "Withdrawal",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              indexed: true,
+              internalType: "uint256",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "error",
+          name: "ERC20TransferFailed",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "InsufficientBalance",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "id",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "want",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "have",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "NativeTransferFailed",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "OwnableInvalidOwner",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OwnableUnauthorizedAccount",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ReentrancyGuardReentrantCall",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "TransferError",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "UnauthorizedOperator",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ZeroAmount",
+          inputs: [],
+        },
+      ],
+      inheritedFunctions: {
+        deposit: "src/interfaces/IBalanceManager.sol",
+        getBalance: "src/interfaces/IBalanceManager.sol",
+        lock: "src/interfaces/IBalanceManager.sol",
+        setAuthorizedOperator: "src/interfaces/IBalanceManager.sol",
+        setFees: "src/interfaces/IBalanceManager.sol",
+        transferFrom: "src/interfaces/IBalanceManager.sol",
+        transferLockedFrom: "src/interfaces/IBalanceManager.sol",
+        transferOut: "src/interfaces/IBalanceManager.sol",
+        unlock: "src/interfaces/IBalanceManager.sol",
+        withdraw: "src/interfaces/IBalanceManager.sol",
+        owner: "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        renounceOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        transferOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+      },
+    },
+    PoolManager: {
+      address: "0x4951a1c579039ebfcba0be33d2cd3a6d30b0f802",
+      abi: [
+        {
+          type: "constructor",
+          inputs: [
+            {
+              name: "_owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "_balanceManager",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "addCommonIntermediary",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "allCurrencies",
+          inputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "commonIntermediaries",
+          inputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "createPool",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_tradingRules",
+              type: "tuple",
+              internalType: "struct IOrderBook.TradingRules",
+              components: [
+                {
+                  name: "minTradeAmount",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "minAmountMovement",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "minPriceMovement",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "minOrderSize",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "slippageTreshold",
+                  type: "uint8",
+                  internalType: "uint8",
+                },
+              ],
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bytes32",
+              internalType: "PoolId",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "createPoolKey",
+          inputs: [
+            {
+              name: "currency1",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "currency2",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "tuple",
+              internalType: "struct PoolKey",
+              components: [
+                {
+                  name: "baseCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "quoteCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+              ],
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "getAllCurrencies",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "Currency[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getCommonIntermediaries",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "Currency[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getPool",
+          inputs: [
+            {
+              name: "key",
+              type: "tuple",
+              internalType: "struct PoolKey",
+              components: [
+                {
+                  name: "baseCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "quoteCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+              ],
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "tuple",
+              internalType: "struct IPoolManager.Pool",
+              components: [
+                {
+                  name: "baseCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "quoteCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "orderBook",
+                  type: "address",
+                  internalType: "contract IOrderBook",
+                },
+              ],
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getPoolId",
+          inputs: [
+            {
+              name: "key",
+              type: "tuple",
+              internalType: "struct PoolKey",
+              components: [
+                {
+                  name: "baseCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "quoteCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+              ],
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bytes32",
+              internalType: "PoolId",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "getPoolLiquidityScore",
+          inputs: [
+            {
+              name: "currency1",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "currency2",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "isCommonIntermediary",
+          inputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "owner",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "poolExists",
+          inputs: [
+            {
+              name: "currency1",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "currency2",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "poolLiquidity",
+          inputs: [
+            {
+              name: "",
+              type: "bytes32",
+              internalType: "PoolId",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "pools",
+          inputs: [
+            {
+              name: "",
+              type: "bytes32",
+              internalType: "PoolId",
+            },
+          ],
+          outputs: [
+            {
+              name: "baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "orderBook",
+              type: "address",
+              internalType: "contract IOrderBook",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "registeredCurrencies",
+          inputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "removeCommonIntermediary",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              internalType: "Currency",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "renounceOwnership",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setRouter",
+          inputs: [
+            {
+              name: "_router",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferOwnership",
+          inputs: [
+            {
+              name: "newOwner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "updatePoolLiquidity",
+          inputs: [
+            {
+              name: "key",
+              type: "tuple",
+              internalType: "struct PoolKey",
+              components: [
+                {
+                  name: "baseCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+                {
+                  name: "quoteCurrency",
+                  type: "address",
+                  internalType: "Currency",
+                },
+              ],
+            },
+            {
+              name: "liquidityScore",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "event",
+          name: "CurrencyAdded",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              indexed: false,
+              internalType: "Currency",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "IntermediaryAdded",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              indexed: false,
+              internalType: "Currency",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "IntermediaryRemoved",
+          inputs: [
+            {
+              name: "currency",
+              type: "address",
+              indexed: false,
+              internalType: "Currency",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "OwnershipTransferred",
+          inputs: [
+            {
+              name: "previousOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "newOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "PoolCreated",
+          inputs: [
+            {
+              name: "poolId",
+              type: "bytes32",
+              indexed: true,
+              internalType: "PoolId",
+            },
+            {
+              name: "orderBook",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+            {
+              name: "baseCurrency",
+              type: "address",
+              indexed: false,
+              internalType: "Currency",
+            },
+            {
+              name: "quoteCurrency",
+              type: "address",
+              indexed: false,
+              internalType: "Currency",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "PoolLiquidityUpdated",
+          inputs: [
+            {
+              name: "poolId",
+              type: "bytes32",
+              indexed: false,
+              internalType: "PoolId",
+            },
+            {
+              name: "newLiquidity",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "error",
+          name: "InvalidRouter",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "OwnableInvalidOwner",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OwnableUnauthorizedAccount",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+      ],
+      inheritedFunctions: {
+        owner: "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        renounceOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        transferOwnership:
+          "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        addCommonIntermediary: "src/interfaces/IPoolManager.sol",
+        createPool: "src/interfaces/IPoolManager.sol",
+        createPoolKey: "src/interfaces/IPoolManager.sol",
+        getAllCurrencies: "src/interfaces/IPoolManager.sol",
+        getCommonIntermediaries: "src/interfaces/IPoolManager.sol",
+        getPool: "src/interfaces/IPoolManager.sol",
+        getPoolId: "src/interfaces/IPoolManager.sol",
+        getPoolLiquidityScore: "src/interfaces/IPoolManager.sol",
+        poolExists: "src/interfaces/IPoolManager.sol",
+        removeCommonIntermediary: "src/interfaces/IPoolManager.sol",
+        setRouter: "src/interfaces/IPoolManager.sol",
+        updatePoolLiquidity: "src/interfaces/IPoolManager.sol",
+      },
+    },
+    GTXRouter: {
+      address: "0x2e8880cadc08e9b438c6052f5ce3869fbd6ce513",
+      abi: [
+        {
+          type: "constructor",
+          inputs: [
+            {
+              name: "_poolManager",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "_balanceManager",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "balanceManager",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "contract IBalanceManager",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "cancelOrder",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "orderId",
+              type: "uint48",
+              internalType: "OrderId",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "getBestPrice",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "tuple",
+              internalType: "struct IOrderBook.PriceVolume",
+              components: [
+                {
+                  name: "price",
+                  type: "uint256",
+                  internalType: "Price",
+                },
+                {
+                  name: "volume",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+              ],
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getNextBestPrices",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "Price",
+            },
+            {
+              name: "count",
+              type: "uint8",
+              internalType: "uint8",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "tuple[]",
+              internalType: "struct IOrderBook.PriceVolume[]",
+              components: [
+                {
+                  name: "price",
+                  type: "uint256",
+                  internalType: "Price",
+                },
+                {
+                  name: "volume",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+              ],
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getOrderQueue",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "Price",
+            },
+          ],
+          outputs: [
+            {
+              name: "orderCount",
+              type: "uint48",
+              internalType: "uint48",
+            },
+            {
+              name: "totalVolume",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getUserActiveOrders",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "tuple[]",
+              internalType: "struct IOrderBook.Order[]",
+              components: [
+                {
+                  name: "user",
+                  type: "address",
+                  internalType: "address",
+                },
+                {
+                  name: "id",
+                  type: "uint48",
+                  internalType: "OrderId",
+                },
+                {
+                  name: "next",
+                  type: "uint48",
+                  internalType: "OrderId",
+                },
+                {
+                  name: "prev",
+                  type: "uint48",
+                  internalType: "OrderId",
+                },
+                {
+                  name: "timestamp",
+                  type: "uint48",
+                  internalType: "uint48",
+                },
+                {
+                  name: "expiry",
+                  type: "uint48",
+                  internalType: "uint48",
+                },
+                {
+                  name: "quantity",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "filled",
+                  type: "uint128",
+                  internalType: "Quantity",
+                },
+                {
+                  name: "price",
+                  type: "uint256",
+                  internalType: "Price",
+                },
+                {
+                  name: "status",
+                  type: "uint8",
+                  internalType: "enum Status",
+                },
+                {
+                  name: "orderType",
+                  type: "uint8",
+                  internalType: "enum OrderType",
+                },
+                {
+                  name: "side",
+                  type: "uint8",
+                  internalType: "enum Side",
+                },
+              ],
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "placeMarketOrder",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "quantity",
+              type: "uint128",
+              internalType: "Quantity",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "orderId",
+              type: "uint48",
+              internalType: "OrderId",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "placeMarketOrderWithDeposit",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "quantity",
+              type: "uint128",
+              internalType: "Quantity",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "orderId",
+              type: "uint48",
+              internalType: "OrderId",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "placeOrder",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "Price",
+            },
+            {
+              name: "quantity",
+              type: "uint128",
+              internalType: "Quantity",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "orderId",
+              type: "uint48",
+              internalType: "OrderId",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "placeOrderWithDeposit",
+          inputs: [
+            {
+              name: "_baseCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "_quoteCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "Price",
+            },
+            {
+              name: "quantity",
+              type: "uint128",
+              internalType: "Quantity",
+            },
+            {
+              name: "side",
+              type: "uint8",
+              internalType: "enum Side",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "orderId",
+              type: "uint48",
+              internalType: "OrderId",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "poolManager",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "contract IPoolManager",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "swap",
+          inputs: [
+            {
+              name: "srcCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "dstCurrency",
+              type: "address",
+              internalType: "Currency",
+            },
+            {
+              name: "srcAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "minDstAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "maxHops",
+              type: "uint8",
+              internalType: "uint8",
+            },
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "receivedAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "error",
+          name: "FillOrKillNotFulfilled",
+          inputs: [
+            {
+              name: "filledAmount",
+              type: "uint128",
+              internalType: "uint128",
+            },
+            {
+              name: "requestedAmount",
+              type: "uint128",
+              internalType: "uint128",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "InvalidOrderType",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "InvalidPrice",
+          inputs: [
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "InvalidPriceIncrement",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "InvalidQuantity",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "InvalidQuantityIncrement",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "OrderHasNoLiquidity",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "OrderNotFound",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "OrderTooLarge",
+          inputs: [
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "maxAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OrderTooSmall",
+          inputs: [
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "minAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "PostOnlyWouldTake",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "SlippageExceeded",
+          inputs: [
+            {
+              name: "requestedPrice",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "limitPrice",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "SlippageTooHigh",
+          inputs: [
+            {
+              name: "received",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "minReceived",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "TradingPaused",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "UnauthorizedCancellation",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "UnauthorizedRouter",
+          inputs: [
+            {
+              name: "router",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+      ],
+      inheritedFunctions: {},
     },
   },
   313371: {},
