@@ -1,4 +1,4 @@
-import { type Address, createPublicClient, createWalletClient, http } from 'viem';
+import { type Address, createPublicClient, createWalletClient, http, parseGwei } from 'viem';
 import { mainnet } from 'viem/chains';
 import config, { getChainConfig, gtxRouterAbi, poolManagerAbi } from '../config/config';
 import { OrderResponse, PoolKey, PoolResponse, PriceVolumeResponse, Side } from '../types';
@@ -145,6 +145,7 @@ export class ContractService {
                             side,
                             this.account.address
                         ],
+                        maxPriorityFeePerGas: parseGwei('0.00001')
                     })
                 );
                 return tx;

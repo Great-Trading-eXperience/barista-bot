@@ -1,5 +1,6 @@
 // barista-bot/src/index.ts
 import { BotManager } from './services/botManager';
+import { SummaryService } from './services/summaryService';
 import logger from './utils/logger';
 
 async function main() {
@@ -32,7 +33,11 @@ async function main() {
                 await botManager.startTradingBots();
                 break;
         }
-
+        
+        const summaryService = new SummaryService();
+        // Start the summary service
+        await summaryService.start();
+        
         logger.info(`Barista Bot System running in ${mode} mode`);
     } catch (error) {
         logger.error({ error }, `Unhandled error`);
