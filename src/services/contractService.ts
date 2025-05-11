@@ -92,7 +92,9 @@ export class ContractService {
     async getUserActiveOrders(): Promise<OrderResponse[]> {
         try {
             const walletAddress: String = this.walletClient.account.address
-            const userActiveOrders = await getUserActiveOrders(walletAddress);
+            const chainId: number = await this.walletClient.getChainId();
+            const { orderBook }: Pool = await this.getPool();
+            const userActiveOrders = await getUserActiveOrders(walletAddress, chainId, orderBook);
             return userActiveOrders as OrderResponse[];
         } catch (error) {
             logger.error({ error: error }, 'Error getting user active orders');

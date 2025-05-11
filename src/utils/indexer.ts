@@ -4,12 +4,12 @@ import { OrderResponse } from "../types";
 import GET_USER_ACTIVE_ORDERS from "../graphql/getUserActiveOrders";
  
 
-export const getUserActiveOrders = async (user: String) => {
+export const getUserActiveOrders = async (user: String, chainId: number, poolId: String) => {
   const client = getSubGraphClient();
   try {
     const current_timestamp = Date.now() / 1000
     const response = (
-      await client.request<{ orderss: { items: OrderResponse[]} }>(GET_USER_ACTIVE_ORDERS , { current_timestamp, user})
+      await client.request<{ orderss: { items: OrderResponse[]} }>(GET_USER_ACTIVE_ORDERS , { current_timestamp, user, chainId, poolId})
     ).orderss.items;
     return response;
   } catch (error) {

@@ -1,7 +1,17 @@
 import { gql } from 'graphql-request'
 const GET_USER_ACTIVE_ORDERS = gql`
-  query getActiveOrder($current_time: Int, $user: String) {
-    orderss(where: { status: "OPEN", expiry_gte: $current_time, user: $user }) {
+  query getActiveOrder($currentTime: Int, $user: String, $chainId: Int, $poolId: String) {
+    orderss(
+      where: {
+        AND: [
+          { OR: [{ status: "OPEN" }, { status: "PARTIALLY_FILLED" }] }
+          { user: $user }
+          { chainId: $chainId }
+          { expiry_gte: $currentTime }
+          { poolId: $poolId }
+        ]
+      }
+    ) {
       items {
         side
         quantity
@@ -9,6 +19,7 @@ const GET_USER_ACTIVE_ORDERS = gql`
         id: orderId
         expiry
         type
+        poolId
       }
     }
   }
