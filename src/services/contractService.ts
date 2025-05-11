@@ -116,7 +116,7 @@ export class ContractService {
                             [baseCurrency, quoteCurrency, orderBook],
                             orderIdBigInt
                         ],
-                        maxPriorityFeePerGas: parseGwei('0.001'),
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
                         gas: BigInt(700000)
                     })
                 );
@@ -159,7 +159,7 @@ export class ContractService {
                             side,
                             this.account.address
                         ],
-                        maxPriorityFeePerGas: parseGwei('0.001'),
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
                         gas: BigInt(700000)
                     })
                 );
@@ -186,7 +186,7 @@ export class ContractService {
                             side,
                             this.account.address
                         ],
-                        maxPriorityFeePerGas: parseGwei('0.001'),
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
                         gas: BigInt(700000)
                     })
                 );
@@ -213,7 +213,7 @@ export class ContractService {
                             side,
                             this.account.address
                         ],
-                        maxPriorityFeePerGas: parseGwei('0.001'),
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
                         gas: BigInt(700000),
                     })
                 );
