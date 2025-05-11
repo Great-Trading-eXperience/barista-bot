@@ -1,8 +1,9 @@
 import { type Address, createPublicClient, createWalletClient, http, parseGwei } from 'viem';
 import { mainnet } from 'viem/chains';
-import config, { getChainConfig, gtxRouterAbi, poolManagerAbi } from '../config/config';
-import { OrderResponse, PoolKey, PoolResponse, PriceVolumeResponse, Side } from '../types';
+import config, { getChainConfig, gtxRouterAbi, poolManagerAbi, poolManagerResolverAbi } from '../config/config';
+import { OrderResponse, Pool, PoolKey, PoolResponse, PriceVolumeResponse, Side } from '../types';
 import logger from '../utils/logger';
+import { getUserActiveOrders } from '../utils/indexer';
 
 export class ContractService {
     private publicClient;
@@ -55,7 +56,7 @@ export class ContractService {
     async verifyPool(): Promise<PoolResponse> {
         try {
             const pool = await this.publicClient.readContract({
-                address: config.poolManagerAddress,
+                address: config.proxyPoolManagerAddress,
                 abi: poolManagerAbi,
                 functionName: 'getPool',
                 args: [this.poolKey],
@@ -71,7 +72,7 @@ export class ContractService {
     async getBestPrice(side: Side): Promise<PriceVolumeResponse> {
         try {
             const result = await this.publicClient.readContract({
-                address: config.routerAddress,
+                address: config.proxyRouterAddress,
                 abi: gtxRouterAbi,
                 functionName: 'getBestPrice',
                 args: [this.poolKey.baseCurrency, this.poolKey.quoteCurrency, side],
@@ -90,13 +91,8 @@ export class ContractService {
 
     async getUserActiveOrders(): Promise<OrderResponse[]> {
         try {
-            const userActiveOrders = await this.publicClient.readContract({
-                address: config.routerAddress,
-                abi: gtxRouterAbi,
-                functionName: 'getUserActiveOrders',
-                args: [this.poolKey.baseCurrency, this.poolKey.quoteCurrency, this.account.address],
-            });
-
+            const walletAddress: String = this.walletClient.account.address
+            const userActiveOrders = await getUserActiveOrders(walletAddress);
             return userActiveOrders as OrderResponse[];
         } catch (error) {
             logger.error({ error: error }, 'Error getting user active orders');
@@ -107,16 +103,16 @@ export class ContractService {
     async cancelOrder(orderId: string): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
+                const { baseCurrency, quoteCurrency, orderBook }: Pool = await this.getPool();
                 const orderIdBigInt = BigInt(orderId);
 
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
-                        address: config.routerAddress,
+                        address: config.proxyRouterAddress,
                         abi: gtxRouterAbi,
                         functionName: 'cancelOrder',
                         args: [
-                            this.poolKey.baseCurrency,
-                            this.poolKey.quoteCurrency,
+                            [baseCurrency, quoteCurrency, orderBook],
                             orderIdBigInt
                         ],
                     })
@@ -129,23 +125,39 @@ export class ContractService {
         });
     }
 
+    async getPool(): Promise<Pool> {
+        try {
+            const pool = await this.publicClient.readContract({
+                address: config.proxyPoolManagerResolverAddress,
+                abi: poolManagerResolverAbi,
+                functionName: 'getPool',
+                args: [this.poolKey.baseCurrency, this.poolKey.quoteCurrency, config.proxyPoolManagerAddress],
+            });
+            return pool as unknown as Pool;
+        } catch (error) {
+            logger.error({ error: error }, 'Error getting pool data');
+            throw error;
+        }
+    }
+
     async placeOrder(side: Side, price: bigint, quantity: bigint): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
+                const { baseCurrency, quoteCurrency, orderBook }: Pool = await this.getPool();
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
-                        address: config.routerAddress,
+                        address: config.proxyRouterAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeOrderWithDeposit',
                         args: [
-                            this.poolKey.baseCurrency,
-                            this.poolKey.quoteCurrency,
+                            [baseCurrency, quoteCurrency, orderBook],
                             price,
                             quantity,
                             side,
                             this.account.address
                         ],
-                        maxPriorityFeePerGas: parseGwei('0.00001')
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
+                        gas: BigInt(500000)
                     })
                 );
                 return tx;
@@ -159,18 +171,20 @@ export class ContractService {
     async placeMarketOrder(side: Side, quantity: bigint): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
+                const { baseCurrency, quoteCurrency, orderBook }: Pool = await this.getPool();
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
-                        address: config.routerAddress,
+                        address: config.proxyRouterAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeMarketOrder',
                         args: [
-                            this.poolKey.baseCurrency,
-                            this.poolKey.quoteCurrency,
+                            [baseCurrency, quoteCurrency, orderBook],
                             quantity,
                             side,
                             this.account.address
                         ],
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
+                        gas: BigInt(500000)
                     })
                 );
                 return tx;
@@ -184,18 +198,20 @@ export class ContractService {
     async placeMarketOrderWithDeposit(side: Side, quantity: bigint): Promise<`0x${string}`> {
         return this.queueTransaction(async () => {
             try {
+                const { baseCurrency, quoteCurrency, orderBook }: Pool = await this.getPool();
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
-                        address: config.routerAddress,
+                        address: config.proxyRouterAddress,
                         abi: gtxRouterAbi,
                         functionName: 'placeMarketOrderWithDeposit',
                         args: [
-                            this.poolKey.baseCurrency,
-                            this.poolKey.quoteCurrency,
+                            [baseCurrency, quoteCurrency, orderBook],
                             quantity,
                             side,
                             this.account.address
                         ],
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
+                        gas: BigInt(500000)
                     })
                 );
                 return tx;

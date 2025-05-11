@@ -38,7 +38,7 @@ export async function setup(account?: Account) {
     try {
         const baseToken = config.baseToken;
         const quoteToken = config.quoteToken;
-        const balanceManagerAddress = config.balanceManagerAddress;
+        const balanceManagerAddress = config.proxyBalanceManagerAddress;
 
         // Check current balances
         const baseTokenBalance = await getTokenBalance(baseToken, accountToUse.address);

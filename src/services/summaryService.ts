@@ -85,7 +85,7 @@ export class SummaryService {
             // Get the timestamp of the latest block
             const latestBlockTimestamp = Number(block.timestamp);
             logger.info(`${latestBlockTimestamp}, ${timestamp}`);
-            // Estimate block number based on average block time (assuming 12 seconds per block)
+            
             const blocksToSubtract = Math.floor((latestBlockTimestamp - timestamp) / this.averageBlockTime);
             const estimatedBlockNumber = Number(block.number) - blocksToSubtract;
 

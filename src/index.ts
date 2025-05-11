@@ -12,6 +12,10 @@ async function main() {
         // Get command line arguments
         const args = process.argv.slice(2);
         const mode = args[0]?.toLowerCase() || 'all';
+        
+        const summaryService = new SummaryService();
+        // Start the summary service
+        await summaryService.start();
 
         switch (mode) {
             case 'market-maker':
@@ -33,10 +37,6 @@ async function main() {
                 await botManager.startTradingBots();
                 break;
         }
-        
-        const summaryService = new SummaryService();
-        // Start the summary service
-        await summaryService.start();
         
         logger.info(`Barista Bot System running in ${mode} mode`);
     } catch (error) {

@@ -12,6 +12,12 @@ export interface PoolKey {
     quoteDecimals?: number;
 }
 
+export interface Pool {
+    baseCurrency: Address,
+    quoteCurrency: Address,
+    orderBook: Address
+}
+
 export type PriceVolumeResponse = {
     price: bigint;
     volume: bigint;

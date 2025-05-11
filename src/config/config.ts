@@ -49,11 +49,13 @@ const chainTokenConfig: Record<number, { baseToken: Address, quoteToken: Address
 const poolManagerAddress = getAddress(deployedContracts[chainId]?.PoolManager?.address);
 const gtxRouterAddress = getAddress(deployedContracts[chainId]?.GTXRouter?.address);
 const balanceManagerAddress = getAddress(deployedContracts[chainId]?.BalanceManager?.address);
+const poolManagerResolverAddress = getAddress(deployedContracts[chainId]?.PoolManagerResolver?.address);
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
 export const gtxRouterAbi = deployedContracts[chainId]?.GTXRouter?.abi;
 export const poolManagerAbi = deployedContracts[chainId]?.PoolManager?.abi;
 export const balanaceManagerAbi = deployedContracts[chainId]?.BalanceManager?.abi;
+export const poolManagerResolverAbi = deployedContracts[chainId]?.PoolManagerResolver?.abi;
 
 export function getChainConfig(): Chain {
     logger.info(`Using chain configuration for chain ID: ${chainId}`);
@@ -79,6 +81,11 @@ const config = {
     poolManagerAddress: poolManagerAddress as Address,
     routerAddress: gtxRouterAddress as Address,
     balanceManagerAddress: balanceManagerAddress as Address,
+    poolManagerResolverAddress: poolManagerResolverAddress as Address,
+    proxyPoolManagerAddress: process.env.PROXY_POOL_MANAGER as Address,
+    proxyBalanceManagerAddress: process.env.PROXY_BALANCE_MANAGER as Address,
+    proxyRouterAddress: process.env.PROXY_GTX_ROUTER as Address,
+    proxyPoolManagerResolverAddress: process.env.PROXY_POOL_MANAGER_RESOLVER as Address,
 
     baseToken: currentChainTokens.baseToken,
     quoteToken: currentChainTokens.quoteToken,
