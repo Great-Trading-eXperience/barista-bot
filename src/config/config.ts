@@ -104,7 +104,11 @@ const config = {
     rpcUrl: process.env.RPC_URL as string,
     chainId: chainId,
 
-    mainnetRpcUrl: process.env.MAINNET_RPC_URL
+    mainnetRpcUrl: process.env.MAINNET_RPC_URL,
+    
+    marketPair: process.env.MARKET_PAIR,
+    chainlinkPairAddress: process.env.CHAINLINK_PAIR_ADDRESS,
+    defaultPrice: process.env.DEFAULT_PRICE
 };
 
 export default config;

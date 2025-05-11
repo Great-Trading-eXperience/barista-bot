@@ -1,4 +1,4 @@
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import config from '../config/config';
 import { Side } from '../types';
 import { setup } from "../scripts/setup";
@@ -16,6 +16,14 @@ export class MarketMaker {
     constructor() {
         this.config = config;
         this.contractService = new ContractService();
+    }
+
+    private convertDecimals(value: bigint, toDecimals: number = 16): bigint {
+        // First format the bigint to a string with the original decimals ( set to 18)
+        const formattedValue = formatUnits(value, 18);
+        
+        // Then parse it back to bigint with the target decimals
+        return parseUnits(formattedValue, toDecimals)
     }
 
     private roundToNearestPriceIncrement(price: bigint): bigint {
@@ -139,6 +147,10 @@ export class MarketMaker {
                 }
             }
 
+            if (price === 0n) {
+                price = BigInt(this.config.defaultPrice!);
+            }
+
             if (price > 0n) {
                 this.lastMidPrice = price;
             }
@@ -152,7 +164,7 @@ export class MarketMaker {
     // Modify the fetchBinancePrice method
     private async fetchBinancePrice(): Promise<bigint> {
         try {
-            const response = await fetch('https://data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDC');
+            const response = await fetch(`https://data-api.binance.vision/api/v3/ticker/price?symbol=${this.config.marketPair}`);
 
             if (!response.ok) {
                 throw new Error(`Binance API error: ${response.status}`);
@@ -339,7 +351,7 @@ export class MarketMaker {
                 logger.debug(`Placing sell order at price ${formatUnits(price, this.contractService.quoteDecimals)} with ${formatUnits(quantity, decimals)} base tokens`);
             }
 
-            const tx = await this.contractService.placeOrder(side, price, quantity);
+            const tx = await this.contractService.placeOrder(side, price, this.convertDecimals(quantity, decimals));
             logger.debug(`Order placed, transaction: ${tx}`);
         } catch (error) {
             logger.error({ error, side: side === Side.BUY ? 'buy' : 'sell' }, `Error placing ${side === Side.BUY ? 'buy' : 'sell'} order`);

@@ -107,7 +107,6 @@ export class ContractService {
             try {
                 const { baseCurrency, quoteCurrency, orderBook }: Pool = await this.getPool();
                 const orderIdBigInt = BigInt(orderId);
-
                 const tx = await this.executeWithNonce(
                     () => this.walletClient.writeContract({
                         address: config.proxyRouterAddress,
@@ -117,6 +116,8 @@ export class ContractService {
                             [baseCurrency, quoteCurrency, orderBook],
                             orderIdBigInt
                         ],
+                        maxPriorityFeePerGas: parseGwei('0.00001'),
+                        gas: BigInt(500000)
                     })
                 );
                 return tx;
@@ -226,7 +227,7 @@ export class ContractService {
 
     async fetchChainlinkPrice(): Promise<bigint> {
         try {
-            const chainlinkFeed = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
+            const chainlinkFeed = config.chainlinkPairAddress;
             const response = await this.ethClient.readContract({
                 address: chainlinkFeed as Address,
                 abi: [
