@@ -4,13 +4,52 @@ import { setup } from '../scripts/setup';
 import { privateKeyToAccount } from 'viem/accounts';
 import * as dotenv from "dotenv";
 import logger from '../utils/logger';
+import { updateByCloud } from '../config/config';
 
 dotenv.config();
 
 export class BotManager {
     private marketMaker: MarketMaker | null = null;
     private tradingBots: TradingBot[] = [];
+    private configRefreshTimer: NodeJS.Timeout | null = null;
+    private readonly CONFIG_REFRESH_INTERVAL = 60 * 1000; // 1 minute in milliseconds
 
+    private async startConfigRefreshTimer(): Promise<void> {
+        // Clear any existing timer
+        if (this.configRefreshTimer) {
+            clearInterval(this.configRefreshTimer);
+        }
+        await this.refreshConfig();
+        // Start new timer
+        this.configRefreshTimer = setInterval(async () => {
+            await this.refreshConfig();
+        }, this.CONFIG_REFRESH_INTERVAL);
+        
+        logger.info('Started config refresh timer');
+    }
+
+    private stopConfigRefreshTimer(): void {
+        if (this.configRefreshTimer) {
+            clearInterval(this.configRefreshTimer);
+            this.configRefreshTimer = null;
+            logger.info('Stopped config refresh timer');
+        }
+    }
+
+    async refreshConfig(): Promise<void> {
+        let refreshedConfig = null;
+        try {
+            refreshedConfig = await updateByCloud();
+        } catch (error) {
+            logger.error({ error }, 'Error refreshing config');
+            return;
+        }
+        if (!refreshedConfig) return;
+        logger.info('Refreshed config', refreshedConfig);
+        this.marketMaker?.updateConfig(refreshedConfig);
+        this.tradingBots.forEach(bot => bot.updateConfig(refreshedConfig));
+    }
+    
     async startMarketMaker(): Promise<void> {
         logger.info('Starting Market Maker');
 
@@ -23,6 +62,7 @@ export class BotManager {
             }
 
             await this.marketMaker.start();
+            this.startConfigRefreshTimer(); // Start the config refresh timer
 
             logger.info('Market maker started and providing liquidity');
             this.setupShutdownHandlers();
@@ -77,6 +117,7 @@ export class BotManager {
             }
 
             logger.info(`${this.tradingBots.length} trading bots running`);
+            this.startConfigRefreshTimer(); // Start the config refresh timer if not already started
             this.setupShutdownHandlers();
 
             return Promise.resolve();
@@ -102,6 +143,8 @@ export class BotManager {
     }
 
     private async shutdown(): Promise<void> {
+        this.stopConfigRefreshTimer(); // Stop the config refresh timer
+        
         // Stop all trading bots
         for (const bot of this.tradingBots) {
             logger.info(`Stopping bot for account ${bot.getAccountAddress()}`);

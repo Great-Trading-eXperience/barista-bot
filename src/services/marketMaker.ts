@@ -10,12 +10,18 @@ export class MarketMaker {
     private activeOrderIds: { [side: number]: string[] } = { [Side.BUY]: [], [Side.SELL]: [] };
     private lastMidPrice: bigint = 0n;
     private readonly contractService: ContractService;
-    private readonly config;
+    private config;
     private isProcessing: boolean = false;
 
     constructor() {
         this.config = config;
         this.contractService = new ContractService();
+    }
+
+    public async updateConfig(newConfig: any) {
+        this.config = newConfig;
+        await this.stop();
+        await this.start();
     }
 
     private convertDecimals(value: bigint, toDecimals: number = 16): bigint {
@@ -82,7 +88,7 @@ export class MarketMaker {
                 logger.error({ error }, 'Error in market making cycle');
                 this.isProcessing = false;
             }
-        }, config.refreshInterval);
+        }, this.config.refreshInterval);
 
         await this.performMarketMakingCycle();
 
@@ -324,7 +330,7 @@ export class MarketMaker {
             const formattedBuyPrice = this.roundToNearestPriceIncrement(
                 this.contractService.formatPrice(buyPrice)
             );
-            await this.placeOrder(Side.BUY, formattedBuyPrice, config.orderSize);
+            await this.placeOrder(Side.BUY, formattedBuyPrice, this.config.orderSize);
         }
 
         for (let i = 0; i < this.config.maxOrdersPerSide; i++) {
@@ -335,7 +341,7 @@ export class MarketMaker {
             const formattedSellPrice = this.roundToNearestPriceIncrement(
                 this.contractService.formatPrice(sellPrice)
             );
-            await this.placeOrder(Side.SELL, formattedSellPrice, config.orderSize);
+            await this.placeOrder(Side.SELL, formattedSellPrice, this.config.orderSize);
         }
 
         logger.info('Maker orders placed');

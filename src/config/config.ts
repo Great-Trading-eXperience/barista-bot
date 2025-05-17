@@ -77,6 +77,43 @@ const currentChainTokens = chainTokenConfig[chainId] || {
     quoteToken: process.env.QUOTE_TOKEN_ADDRESS as Address,
 };
 
+export const updateByCloud = async () => {
+    if(!process.env.CLOUD_UPDATE_URL) return;
+    const response = await fetch(process.env.CLOUD_UPDATE_URL);
+    
+    if (!response.ok) return;
+    const data = await response.json();
+    const dataObj: Record<string, string> = {};
+    data.data.forEach((d: {key: string, value: string}) => { dataObj[d.key] = d.value });
+    
+    if(dataObj.SPREAD_PERCENTAGE) {
+        config.spreadPercentage = Number(dataObj.SPREAD_PERCENTAGE);
+        logger.info(`Updated spread percentage: ${config.spreadPercentage}`);
+    };
+    if(dataObj.ORDER_SIZE) {
+        config.orderSize = parseUnits(dataObj.ORDER_SIZE, 18);
+        logger.info(`Updated order size: ${config.orderSize}`);
+    };
+    if(dataObj.MAX_ORDERS_PER_SIDE) {
+        config.maxOrdersPerSide = Number(dataObj.MAX_ORDERS_PER_SIDE);
+        logger.info(`Updated max orders per side: ${config.maxOrdersPerSide}`)
+    };
+    if(dataObj.PRICE_STEP_PERCENTAGE) {
+        config.priceStepPercentage = Number(dataObj.PRICE_STEP_PERCENTAGE);
+        logger.info(`Updated price step percentage: ${config.priceStepPercentage}`);
+    };
+    if(dataObj.REFRESH_INTERVAL) {
+        config.refreshInterval = Number(dataObj.REFRESH_INTERVAL);
+        logger.info(`Updated refresh interval: ${config.refreshInterval}`);
+    };
+    if(dataObj.PRICE_DEVIATION_THRESHOLD_BPS) {
+        config.priceDeviationThresholdBps = Number(dataObj.PRICE_DEVIATION_THRESHOLD_BPS);
+        logger.info(`Updated price deviation threshold bps: ${config.priceDeviationThresholdBps}`);
+    };
+
+    return config;
+}
+
 const config = {
     poolManagerAddress: poolManagerAddress as Address,
     routerAddress: gtxRouterAddress as Address,

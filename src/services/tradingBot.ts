@@ -10,10 +10,12 @@ export class TradingBot {
     private lastPrices: bigint[] = [];
     private contractService: ContractService;
     private intervalType: IntervalType;
+    private config;
 
     constructor(private account = config.account) {
         const envInterval = (process.env.TRADING_BOT_INTERVAL || 'normal').toLowerCase();
 
+        this.config = config;
         switch (envInterval) {
             case 'high_freq':
                 this.intervalType = IntervalType.HIGH_FREQ;
@@ -32,6 +34,12 @@ export class TradingBot {
 
         this.strategy = "random";
         this.contractService = new ContractService(account);
+    }
+
+    public async updateConfig(newConfig: any) {
+        this.config = newConfig;
+        await this.stop();
+        await this.start();
     }
 
     randomizeStrategy() {
@@ -113,7 +121,7 @@ export class TradingBot {
             const maxMultiplier = 0.3;
             const randomValue = Math.random() * (maxMultiplier - minMultiplier) + minMultiplier;
             const selectedMultiplier = Math.round(randomValue * 100) / 100;
-            const quantity = BigInt(Math.floor(Number(config.orderSize) * selectedMultiplier));
+            const quantity = BigInt(Math.floor(Number(this.config.orderSize) * selectedMultiplier));
 
             if (side === Side.BUY) {
                 logger.info(`Executing buy order with ${formatEther(quantity)} quote tokens (${selectedMultiplier * 100}% size)`);
