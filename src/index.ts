@@ -17,6 +17,8 @@ async function main() {
         // Start the summary service
         await summaryService.start();
 
+        await botManager.startConfigRefreshTimer();
+
         switch (mode) {
             case 'market-maker':
                 await botManager.startMarketMaker();

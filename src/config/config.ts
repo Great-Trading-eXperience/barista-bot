@@ -77,10 +77,16 @@ const currentChainTokens = chainTokenConfig[chainId] || {
     quoteToken: process.env.QUOTE_TOKEN_ADDRESS as Address,
 };
 
-export const updateByCloud = async () => {
+export const updateByCloud = async (loginToken: string) => {
+    if(!loginToken) return;
     if(!process.env.CLOUD_UPDATE_URL) return;
-    const response = await fetch(process.env.CLOUD_UPDATE_URL);
-    
+    const response = await fetch(process.env.CLOUD_UPDATE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${loginToken}`
+        }
+    });
     if (!response.ok) return;
     const data = await response.json();
     const dataObj: Record<string, string> = {};

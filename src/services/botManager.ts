@@ -13,12 +13,61 @@ export class BotManager {
     private tradingBots: TradingBot[] = [];
     private configRefreshTimer: NodeJS.Timeout | null = null;
     private readonly CONFIG_REFRESH_INTERVAL = 60 * 1000; // 1 minute in milliseconds
+    private loginToken: string | null = null;
 
-    private async startConfigRefreshTimer(): Promise<void> {
+    private async login(): Promise<boolean> {
+        if (!process.env.CLOUD_ENV_LOGIN_URL || !process.env.CLOUD_ENV_USERNAME || !process.env.CLOUD_ENV_PASSWORD) {
+            logger.error('Missing login credentials or login URL');
+            return false;
+        }
+
+        try {
+            const response = await fetch(process.env.CLOUD_ENV_LOGIN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: process.env.CLOUD_ENV_USERNAME,
+                    password: process.env.CLOUD_ENV_PASSWORD
+                })
+            });
+
+            if (!response.ok) {
+                logger.error('Login failed:', await response.text());
+                return false;
+            }
+
+            const data = await response.json();
+            if (!data.token) {
+                logger.error('No token received from login');
+                return false;
+            }
+
+            this.loginToken = data.token;
+            logger.info('Successfully logged in');
+            return true;
+        } catch (error) {
+            logger.error({ error }, 'Error during login');
+            return false;
+        }
+    }
+
+    public async startConfigRefreshTimer(): Promise<void> {
         // Clear any existing timer
         if (this.configRefreshTimer) {
             clearInterval(this.configRefreshTimer);
         }
+
+        // Try to login first if we don't have a token
+        if (!this.loginToken) {
+            const loginSuccess = await this.login();
+            if (!loginSuccess) {
+                logger.error('Failed to login, config refresh timer not started');
+                return;
+            }
+        }
+
         await this.refreshConfig();
         // Start new timer
         this.configRefreshTimer = setInterval(async () => {
@@ -39,11 +88,29 @@ export class BotManager {
     async refreshConfig(): Promise<void> {
         let refreshedConfig = null;
         try {
-            refreshedConfig = await updateByCloud();
+            // If we don't have a token, try to login first
+            if (!this.loginToken) {
+                const loginSuccess = await this.login();
+                if (!loginSuccess) {
+                    logger.error('Failed to login during config refresh');
+                    return;
+                }
+            }
+
+            refreshedConfig = await updateByCloud(this.loginToken ?? '');
+            if (!refreshedConfig) {
+                // If update failed, token might be expired, try to login again
+                const loginSuccess = await this.login();
+                if (loginSuccess) {
+                    refreshedConfig = await updateByCloud(this.loginToken ?? '');
+                }
+            }
         } catch (error) {
             logger.error({ error }, 'Error refreshing config');
+            this.loginToken = null;
             return;
         }
+
         if (!refreshedConfig) return;
         logger.info('Refreshed config', refreshedConfig);
         this.marketMaker?.updateConfig(refreshedConfig);
@@ -62,7 +129,6 @@ export class BotManager {
             }
 
             await this.marketMaker.start();
-            this.startConfigRefreshTimer(); // Start the config refresh timer
 
             logger.info('Market maker started and providing liquidity');
             this.setupShutdownHandlers();
@@ -116,8 +182,7 @@ export class BotManager {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            logger.info(`${this.tradingBots.length} trading bots running`);
-            this.startConfigRefreshTimer(); // Start the config refresh timer if not already started
+            logger.info(`${this.tradingBots.length} trading bots running`)
             this.setupShutdownHandlers();
 
             return Promise.resolve();
